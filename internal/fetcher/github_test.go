@@ -1,14 +1,50 @@
 package fetcher_test
 
 import (
+	"context"
+	_ "embed"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/tahardi/pluckmd/internal/fetcher"
 )
 
+//go:embed github.go
+var githubGo []byte
+
 func TestGitHubFetcher_Fetch(t *testing.T) {
-	// TODO: Happy path fetch github.go from this repo
-	// and compare to an embeded version!
+	t.Run("happy path - fetcher/github.go", func(t *testing.T) {
+		// given
+		ctx := context.Background()
+		want := githubGo
+		uri := "https://github.com/tahardi/pluckmd/blob/main/internal/fetcher/github.go"
+		ghfetcher, err := fetcher.NewGitHubFetcher()
+		require.NoError(t, err)
+
+		// when
+		got, err := ghfetcher.Fetch(ctx, uri)
+
+		// then
+		require.NoError(t, err)
+		assert.Equal(t, want, got)
+	})
+
+	t.Run("error - context canceled", func(t *testing.T) {
+		// given
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		uri := "https://github.com/tahardi/pluckmd/blob/main/internal/fetcher/github.go"
+		ghfetcher, err := fetcher.NewGitHubFetcher()
+		require.NoError(t, err)
+
+		// when
+		_, err = ghfetcher.Fetch(ctx, uri)
+
+		// then
+		require.Error(t, err)
+		assert.ErrorContains(t, err, "context canceled")
+	})
 }
 
 func TestURItoRawGitHubURL(t *testing.T) {
