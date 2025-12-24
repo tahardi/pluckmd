@@ -15,8 +15,8 @@ const (
 )
 
 var mainCmd = &cobra.Command{
-	Use: "pluckmd",
-	Short: "CLI tool for downloading and inserting Go code into markdown docs",
+	Use:          "pluckmd",
+	Short:        "CLI tool for downloading and inserting Go code into markdown docs",
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		runner, err := run.NewRunner()
@@ -52,7 +52,6 @@ func init() {
 	)
 }
 
-// TODO: Add basic Makefile w/linter and other checks/tools
 func main() {
 	if err := mainCmd.Execute(); err != nil {
 		fmt.Printf("Command failed: %v\n", err)

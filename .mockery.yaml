@@ -1,0 +1,19 @@
+dir: internal/mocks
+filename: '{{.InterfaceName}}.go'
+structname: '{{.InterfaceName}}'
+pkgname: mocks
+formatter: goimports
+log-level: info
+packages:
+  github.com/tahardi/pluckmd/internal/cache:
+    config:
+    interfaces:
+      Cacher:
+  github.com/tahardi/pluckmd/internal/fetch:
+    config:
+    interfaces:
+      Fetcher:
+  github.com/tahardi/pluckmd/internal/pluck:
+    config:
+    interfaces:
+      Plucker:
