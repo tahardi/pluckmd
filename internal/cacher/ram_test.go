@@ -1,5 +1,5 @@
 
-package cacher_test
+package cache_test
 
 import (
 	"context"
@@ -16,15 +16,15 @@ func TestRAMCacher(t *testing.T) {
 
 	t.Run("happy path", func(t *testing.T) {
 		// given
-		ramcacher, err := cacher.NewRAMCacher()
+		cacher, err := cache.NewRAMCacher()
 		require.NoError(t, err)
 		uri := "https://example.com/data"
 		content := []byte("hello world")
 
 		// when
-		err = ramcacher.Store(ctx, uri, content)
+		err = cacher.Store(ctx, uri, content)
 		require.NoError(t, err)
-		retrieved, err := ramcacher.Retrieve(ctx, uri)
+		retrieved, err := cacher.Retrieve(ctx, uri)
 
 		// then
 		require.NoError(t, err)
@@ -33,39 +33,39 @@ func TestRAMCacher(t *testing.T) {
 
 	t.Run("retrieve uri not found", func(t *testing.T) {
 		// given
-		ramcacher, _ := cacher.NewRAMCacher()
+		cacher, _ := cache.NewRAMCacher()
 		uri := "non-existent"
 
 		// when
-		_, err := ramcacher.Retrieve(ctx, uri)
+		_, err := cacher.Retrieve(ctx, uri)
 
 		// then
 		require.Error(t, err)
-		assert.True(t, errors.Is(err, cacher.ErrRAMCacher))
-		assert.True(t, errors.Is(err, cacher.ErrURINotFound))
+		assert.True(t, errors.Is(err, cache.ErrRAMCacher))
+		assert.True(t, errors.Is(err, cache.ErrURINotFound))
 		assert.Contains(t, err.Error(), uri)
 	})
 
 	t.Run("close clears the vault", func(t *testing.T) {
 		// given
-		ramcacher, _ := cacher.NewRAMCacher()
+		cacher, _ := cache.NewRAMCacher()
 		uri := "key"
 		data := []byte("value")
-		err := ramcacher.Store(ctx, uri, data)
+		err := cacher.Store(ctx, uri, data)
 		require.NoError(t, err)
 
-		got, err := ramcacher.Retrieve(ctx, uri)
+		got, err := cacher.Retrieve(ctx, uri)
 		require.NoError(t, err)
 		assert.Equal(t, data, got)
 
 		// when
-		err = ramcacher.Close()
+		err = cacher.Close()
 		require.NoError(t, err)
-		_, retrieveErr := ramcacher.Retrieve(ctx, uri)
+		_, retrieveErr := cacher.Retrieve(ctx, uri)
 
 		// then
 		require.Error(t, retrieveErr)
-		assert.True(t, errors.Is(retrieveErr, cacher.ErrURINotFound))
+		assert.True(t, errors.Is(retrieveErr, cache.ErrURINotFound))
 	})
 
 	t.Run("initialize with existing vault", func(t *testing.T) {
@@ -75,9 +75,9 @@ func TestRAMCacher(t *testing.T) {
 		}
 
 		// when
-		ramcacher, err := cacher.NewRAMCacherWithVault(vault)
+		cacher, err := cache.NewRAMCacherWithVault(vault)
 		require.NoError(t, err)
-		data, retrieveErr := ramcacher.Retrieve(ctx, "pre-existing")
+		data, retrieveErr := cacher.Retrieve(ctx, "pre-existing")
 
 		// then
 		require.NoError(t, retrieveErr)
