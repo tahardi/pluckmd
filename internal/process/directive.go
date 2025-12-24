@@ -61,8 +61,13 @@ func NewDirective(line string) (*Directive, error) {
 		return nil, fmt.Errorf("%w: invalid end index: %s", ErrDirective, line)
 	}
 
+	kind := pluck.Kind(fields[KindIndex])
+	if !kind.Valid() {
+		return nil, fmt.Errorf("%w: invalid kind: %s", ErrDirective, line)
+	}
+
 	return &Directive{
-		kind:   pluck.Kind(fields[KindIndex]),
+		kind:   kind,
 		name:   fields[NameIndex],
 		source: fields[SourceIndex],
 		start:  start,
