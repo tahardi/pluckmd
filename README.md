@@ -33,7 +33,14 @@ pluck("function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blo
 
 <!-- pluck("function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", -1, -1) -->
 ```go
-
+func (b *BlockyPlucker) Pluck(
+	ctx context.Context,
+	code string,
+	name string,
+	kind Kind,
+) (string, error) {
+	// ...
+}
 ```
 
 The pair `(-1, -1)` is a special case, in that it tells `pluckmd` to exclude
@@ -44,28 +51,100 @@ function or type, but don't want to include the entire body all at once.
 
 <!-- pluck("function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", 0, 3) -->
 ```go
-
+func (b *BlockyPlucker) Pluck(
+	ctx context.Context,
+	code string,
+	name string,
+	kind Kind,
+) (string, error) {
+	if !kind.Valid() {
+		return "", fmt.Errorf("%w: invalid kind '%s'", ErrBlockyPlucker, kind)
+	}
+	// ...
+}
 ```
 
 Instead, we can selectively include the relevant lines for any given step...
 
 <!-- pluck("function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", 4, 12) -->
 ```go
+func (b *BlockyPlucker) Pluck(
+	ctx context.Context,
+	code string,
+	name string,
+	kind Kind,
+) (string, error) {
+	// ...
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	pick := fmt.Sprintf("%s=%s:%s", PickArg, kind, name)
 
+	cmd := exec.CommandContext(ctx, PluckCmd, pick)
+	cmd.Stdin = strings.NewReader(code)
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	// ...
+}
 ```
 
 ...as we work our way through the function...
 
 <!-- pluck("function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", 13, 23) -->
 ```go
-
+func (b *BlockyPlucker) Pluck(
+	ctx context.Context,
+	code string,
+	name string,
+	kind Kind,
+) (string, error) {
+	// ...
+	err := cmd.Run()
+	if err != nil {
+		return "", fmt.Errorf(
+			"%w: running %s: %s",
+			ErrBlockyPlucker,
+			PluckCmd,
+			stderr.String(),
+		)
+	}
+	return out.String(), nil
+}
 ```
 
 ...until we reach the end.
 
 <!-- pluck("function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", 0, 0) -->
 ```go
+func (b *BlockyPlucker) Pluck(
+	ctx context.Context,
+	code string,
+	name string,
+	kind Kind,
+) (string, error) {
+	if !kind.Valid() {
+		return "", fmt.Errorf("%w: invalid kind '%s'", ErrBlockyPlucker, kind)
+	}
 
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	pick := fmt.Sprintf("%s=%s:%s", PickArg, kind, name)
+
+	cmd := exec.CommandContext(ctx, PluckCmd, pick)
+	cmd.Stdin = strings.NewReader(code)
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	if err != nil {
+		return "", fmt.Errorf(
+			"%w: running %s: %s",
+			ErrBlockyPlucker,
+			PluckCmd,
+			stderr.String(),
+		)
+	}
+	return out.String(), nil
+}
 ```
 
 ## Getting Started
