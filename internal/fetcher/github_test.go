@@ -1,4 +1,4 @@
-package fetcher_test
+package fetch_test
 
 import (
 	"context"
@@ -19,11 +19,11 @@ func TestGitHubFetcher_Fetch(t *testing.T) {
 		ctx := context.Background()
 		want := githubGo
 		uri := "https://github.com/tahardi/pluckmd/blob/main/internal/fetcher/github.go"
-		ghfetcher, err := fetcher.NewGitHubFetcher()
+		fetcher, err := fetch.NewGitHubFetcher()
 		require.NoError(t, err)
 
 		// when
-		got, err := ghfetcher.Fetch(ctx, uri)
+		got, err := fetcher.Fetch(ctx, uri)
 
 		// then
 		require.NoError(t, err)
@@ -35,11 +35,11 @@ func TestGitHubFetcher_Fetch(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 		uri := "https://github.com/tahardi/pluckmd/blob/main/internal/fetcher/github.go"
-		ghfetcher, err := fetcher.NewGitHubFetcher()
+		fetcher, err := fetch.NewGitHubFetcher()
 		require.NoError(t, err)
 
 		// when
-		_, err = ghfetcher.Fetch(ctx, uri)
+		_, err = fetcher.Fetch(ctx, uri)
 
 		// then
 		require.Error(t, err)
@@ -113,7 +113,7 @@ func TestURItoRawGitHubURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := fetcher.URItoRawGitHubURL(tt.input)
+			got, err := fetch.URItoRawGitHubURL(tt.input)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("URItoRawGitHubURL() error = %v, wantErr %v", err, tt.wantErr)
 				return
