@@ -41,14 +41,14 @@ func (p *Processor) ProcessMarkdown(
 	ctx context.Context,
 	md []byte,
 ) ([]byte, error) {
-	var processed bytes.Buffer
-	lines := strings.Split(string(md), "\n")
-	for i := 0; i < len(lines); i++ {
-		// If it's the last element and it's empty, it's just the trailing newline from the file
-		if i == len(lines)-1 && lines[i] == "" {
-			break
-		}
+	// Split markdown into lines. If the markdown ends with a newline, Split
+	// will return an empty string as the last element. This will cause us
+	// to write an extra newline to the output. Remove the ending newline
+	// (if any) so that we don't write an extra newline.
+	lines := strings.Split(strings.TrimSuffix(string(md), "\n"), "\n")
 
+	var processed bytes.Buffer
+	for i := 0; i < len(lines); i++ {
 		processed.WriteString(lines[i] + "\n")
 		if !ContainsPluckDirective(lines[i]) {
 			continue
