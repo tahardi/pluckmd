@@ -10,6 +10,10 @@ import (
 )
 
 const (
+	EmptyStart   = -1
+	EmptyEnd     = -1
+	FullStart    = 0
+	FullEnd      = 0
 	EllipsesLine = "\t// ...\n"
 	OpeningBrace = "{\n"
 	ClosingBrace = "}\n"
@@ -66,6 +70,10 @@ func (s *Snippet) Full() string {
 	return s.definition + OpeningBrace + s.body + ClosingBrace
 }
 
+func (s *Snippet) Empty() string {
+	return s.definition + OpeningBrace + EllipsesLine + ClosingBrace
+}
+
 func (s *Snippet) Partial(start int, end int) (string, error) {
 	// Lazy initialization of bodyLines. Sometimes we end up with empty lines
 	// at the beginning and ending of the body. If so, remove them.
@@ -84,6 +92,10 @@ func (s *Snippet) Partial(start int, end int) (string, error) {
 	}
 
 	switch {
+	case start == EmptyStart && end == EmptyEnd:
+		return s.Empty(), nil
+	case start == FullStart && end == FullEnd:
+		return s.Full(), nil
 	case start < 0 || end < 0 || start > end || end > s.length:
 		return "", fmt.Errorf(
 			"%w: invalid range [start: %d, end: %d)",
@@ -91,10 +103,7 @@ func (s *Snippet) Partial(start int, end int) (string, error) {
 			start,
 			end,
 		)
-	case start == end:
-		return s.Full(), nil
 	}
-
 
 	// If we are skipping the beginning of the body, add an Ellipses line to
 	// indicate that there is hidden code we are not including.
@@ -116,14 +125,12 @@ func (s *Snippet) Partial(start int, end int) (string, error) {
 	return snippet, nil
 }
 
-// TODO: Go through and comment/fix/optimize AI stuff
 func ParseSnippet(snippet string) (string, string, error) {
 	fset := token.NewFileSet()
 
 	// Wrap snippet in a package to make it a valid Go file for the parser
 	dummyPackage := "package dummy\n"
 	dummySource := dummyPackage + snippet
-	// TODO: What does this do? We are passing an empty filename
 	f, err := parser.ParseFile(fset, "", dummySource, 0)
 	if err != nil {
 		return "", "", fmt.Errorf("making ast file: %w", err)
