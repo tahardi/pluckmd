@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tahardi/pluckmd/internal/fetcher"
+	"github.com/tahardi/pluckmd/internal/fetch"
 )
 
 //go:embed github.go

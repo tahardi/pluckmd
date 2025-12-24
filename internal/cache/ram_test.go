@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tahardi/pluckmd/internal/cacher"
+	"github.com/tahardi/pluckmd/internal/cache"
 )
 
 func TestRAMCacher(t *testing.T) {

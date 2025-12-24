@@ -1,4 +1,4 @@
-package plucker
+package pluck
 
 import (
 	"bytes"

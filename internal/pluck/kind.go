@@ -1,4 +1,4 @@
-package plucker
+package pluck
 
 type Kind string
 

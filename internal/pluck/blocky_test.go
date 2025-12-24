@@ -1,11 +1,11 @@
-package plucker_test
+package pluck_test
 
 import (
 	_ "embed"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tahardi/pluckmd/internal/plucker"
+	"github.com/tahardi/pluckmd/internal/pluck"
 )
 
 const (
@@ -51,13 +51,13 @@ func TestBlockyPlucker_Pluck(t *testing.T) {
 		// given
 		code := blockyGo
 		name := blockyPlucker
-		kind := plucker.Type
+		kind := pluck.Type
 		want := blockyPluckerSnippet + "\n"
-		blockyplucker, err := plucker.NewBlockyPlucker()
+		plucker, err := pluck.NewBlockyPlucker()
 		require.NoError(t, err)
 
 		// when
-		got, err := blockyplucker.Pluck(code, name, kind)
+		got, err := plucker.Pluck(code, name, kind)
 
 		// then
 		require.NoError(t, err)
@@ -67,13 +67,13 @@ func TestBlockyPlucker_Pluck(t *testing.T) {
 	t.Run("happy path - BlockyPlucker.Pluck (func)", func(t *testing.T) {
 		code := blockyGo
 		name := blockyPluckerPluck
-		kind := plucker.Func
+		kind := pluck.Func
 		want := blockyPluckerPluckSnippet + "\n"
-		blockyplucker, err := plucker.NewBlockyPlucker()
+		plucker, err := pluck.NewBlockyPlucker()
 		require.NoError(t, err)
 
 		// when
-		got, err := blockyplucker.Pluck(code, name, kind)
+		got, err := plucker.Pluck(code, name, kind)
 
 		// then
 		require.NoError(t, err)
@@ -83,12 +83,12 @@ func TestBlockyPlucker_Pluck(t *testing.T) {
 	t.Run("error - invalid kind", func(t *testing.T) {
 		code := blockyGo
 		name := blockyPluckerPluck
-		kind := plucker.Kind("invalid")
-		blockyplucker, err := plucker.NewBlockyPlucker()
+		kind := pluck.Kind("invalid")
+		plucker, err := pluck.NewBlockyPlucker()
 		require.NoError(t, err)
 
 		// when
-		_, err = blockyplucker.Pluck(code, name, kind)
+		_, err = plucker.Pluck(code, name, kind)
 
 		// then
 		require.Error(t, err)
@@ -97,12 +97,12 @@ func TestBlockyPlucker_Pluck(t *testing.T) {
 	t.Run("error - type/func not in code", func(t *testing.T) {
 		code := blockyGo
 		name := "funcDoesNotExist"
-		kind := plucker.Func
-		blockyplucker, err := plucker.NewBlockyPlucker()
+		kind := pluck.Func
+		plucker, err := pluck.NewBlockyPlucker()
 		require.NoError(t, err)
 
 		// when
-		_, err = blockyplucker.Pluck(code, name, kind)
+		_, err = plucker.Pluck(code, name, kind)
 
 		// then
 		require.Error(t, err)
