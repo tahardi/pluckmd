@@ -22,9 +22,9 @@ var (
 	ErrDirective = errors.New("pluck")
 
 	// PluckRegex The pluck directive we look for in md files is of the form:
-	// <!-- pluck("class", "name", "source", start, end) -->
+	// <!-- pluck("kind", "name", "source", start, end) -->
 	//
-	//	class = "type" or "function"
+	//	kind = "type" or "function"
 	//	name = name of the type or function
 	//	source = relative path for local file or remote git URL
 	//  start = integer representing starting line of code body
