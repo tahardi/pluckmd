@@ -30,7 +30,7 @@ var (
 	//  start = integer representing starting line of code body
 	//  end = integer representing ending line of code body
 	// This regex will match with the directive defined above
-	PluckRegex = regexp.MustCompile(`<!--\s*pluck\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*,\s*"([^"]+)"\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\s*-->`)
+	PluckRegex = regexp.MustCompile(`<!--\s*pluck\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*,\s*"([^"]+)"\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*\)\s*-->`)
 )
 
 func ContainsPluckDirective(line string) bool {
