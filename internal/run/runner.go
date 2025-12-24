@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	DefaultPermissions = 0644
 	MarkdownExt = ".md"
 )
 
@@ -64,7 +65,8 @@ func (r *Runner) Run(ctx context.Context, dir string) error {
 			return fmt.Errorf("%w: processing file: %w", ErrRunner, procErr)
 		}
 
-		writeErr := os.WriteFile(file, processed, 0644)
+		// #nosec G306
+		writeErr := os.WriteFile(file, processed, DefaultPermissions)
 		if writeErr != nil {
 			return fmt.Errorf("%w: writing file: %w", ErrRunner, writeErr)
 		}

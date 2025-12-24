@@ -113,6 +113,7 @@ func (p *Processor) GetCodeSnippet(
 	}
 
 	snippetString, err := p.plucker.Pluck(
+		ctx,
 		string(sourceCode),
 		directive.Name(),
 		directive.Kind(),

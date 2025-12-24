@@ -31,6 +31,7 @@ func TestSnippet_Partial(t *testing.T) {
 
 		start, end := pluck.EmptyStart, pluck.EmptyEnd
 		want := `func (b *BlockyPlucker) Pluck(
+	ctx context.Context,
 	code string,
 	name string,
 	kind Kind,
@@ -53,6 +54,7 @@ func TestSnippet_Partial(t *testing.T) {
 
 		start, end := 0, 3
 		want := `func (b *BlockyPlucker) Pluck(
+	ctx context.Context,
 	code string,
 	name string,
 	kind Kind,
@@ -78,6 +80,7 @@ func TestSnippet_Partial(t *testing.T) {
 
 		start, end := 4, 12
 		want := `func (b *BlockyPlucker) Pluck(
+	ctx context.Context,
 	code string,
 	name string,
 	kind Kind,
@@ -87,7 +90,7 @@ func TestSnippet_Partial(t *testing.T) {
 	var stderr bytes.Buffer
 	pick := fmt.Sprintf("%s=%s:%s", PickArg, kind, name)
 
-	cmd := exec.Command(PluckCmd, pick)
+	cmd := exec.CommandContext(ctx, PluckCmd, pick)
 	cmd.Stdin = strings.NewReader(code)
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
@@ -109,6 +112,7 @@ func TestSnippet_Partial(t *testing.T) {
 
 		start, end := 13, 23
 		want := `func (b *BlockyPlucker) Pluck(
+	ctx context.Context,
 	code string,
 	name string,
 	kind Kind,

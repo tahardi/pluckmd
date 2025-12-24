@@ -5,6 +5,8 @@
 package mocks
 
 import (
+	"context"
+
 	mock "github.com/stretchr/testify/mock"
 	"github.com/tahardi/pluckmd/internal/pluck"
 )
@@ -37,8 +39,8 @@ func (_m *Plucker) EXPECT() *Plucker_Expecter {
 }
 
 // Pluck provides a mock function for the type Plucker
-func (_mock *Plucker) Pluck(code string, name string, kind pluck.Kind) (string, error) {
-	ret := _mock.Called(code, name, kind)
+func (_mock *Plucker) Pluck(ctx context.Context, code string, name string, kind pluck.Kind) (string, error) {
+	ret := _mock.Called(ctx, code, name, kind)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Pluck")
@@ -46,16 +48,16 @@ func (_mock *Plucker) Pluck(code string, name string, kind pluck.Kind) (string, 
 
 	var r0 string
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(string, string, pluck.Kind) (string, error)); ok {
-		return returnFunc(code, name, kind)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, pluck.Kind) (string, error)); ok {
+		return returnFunc(ctx, code, name, kind)
 	}
-	if returnFunc, ok := ret.Get(0).(func(string, string, pluck.Kind) string); ok {
-		r0 = returnFunc(code, name, kind)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, pluck.Kind) string); ok {
+		r0 = returnFunc(ctx, code, name, kind)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
-	if returnFunc, ok := ret.Get(1).(func(string, string, pluck.Kind) error); ok {
-		r1 = returnFunc(code, name, kind)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string, pluck.Kind) error); ok {
+		r1 = returnFunc(ctx, code, name, kind)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -68,31 +70,37 @@ type Plucker_Pluck_Call struct {
 }
 
 // Pluck is a helper method to define mock.On call
+//   - ctx context.Context
 //   - code string
 //   - name string
 //   - kind pluck.Kind
-func (_e *Plucker_Expecter) Pluck(code interface{}, name interface{}, kind interface{}) *Plucker_Pluck_Call {
-	return &Plucker_Pluck_Call{Call: _e.mock.On("Pluck", code, name, kind)}
+func (_e *Plucker_Expecter) Pluck(ctx interface{}, code interface{}, name interface{}, kind interface{}) *Plucker_Pluck_Call {
+	return &Plucker_Pluck_Call{Call: _e.mock.On("Pluck", ctx, code, name, kind)}
 }
 
-func (_c *Plucker_Pluck_Call) Run(run func(code string, name string, kind pluck.Kind)) *Plucker_Pluck_Call {
+func (_c *Plucker_Pluck_Call) Run(run func(ctx context.Context, code string, name string, kind pluck.Kind)) *Plucker_Pluck_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 string
+		var arg0 context.Context
 		if args[0] != nil {
-			arg0 = args[0].(string)
+			arg0 = args[0].(context.Context)
 		}
 		var arg1 string
 		if args[1] != nil {
 			arg1 = args[1].(string)
 		}
-		var arg2 pluck.Kind
+		var arg2 string
 		if args[2] != nil {
-			arg2 = args[2].(pluck.Kind)
+			arg2 = args[2].(string)
+		}
+		var arg3 pluck.Kind
+		if args[3] != nil {
+			arg3 = args[3].(pluck.Kind)
 		}
 		run(
 			arg0,
 			arg1,
 			arg2,
+			arg3,
 		)
 	})
 	return _c
@@ -103,7 +111,7 @@ func (_c *Plucker_Pluck_Call) Return(snippet string, err error) *Plucker_Pluck_C
 	return _c
 }
 
-func (_c *Plucker_Pluck_Call) RunAndReturn(run func(code string, name string, kind pluck.Kind) (string, error)) *Plucker_Pluck_Call {
+func (_c *Plucker_Pluck_Call) RunAndReturn(run func(ctx context.Context, code string, name string, kind pluck.Kind) (string, error)) *Plucker_Pluck_Call {
 	_c.Call.Return(run)
 	return _c
 }

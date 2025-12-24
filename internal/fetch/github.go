@@ -40,7 +40,7 @@ func (g *GitHubFetcher) Fetch(
 ) ([]byte, error) {
 	url, err := URItoRawGitHubURL(uri)
 	if err != nil {
-		return nil, fmt.Errorf("%w: making url: %s", ErrGitHubFetcher, err)
+		return nil, fmt.Errorf("%w: making url: %w", ErrGitHubFetcher, err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)

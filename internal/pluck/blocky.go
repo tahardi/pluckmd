@@ -2,6 +2,7 @@ package pluck
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"os/exec"
@@ -36,6 +37,7 @@ func NewBlockyPlucker() (*BlockyPlucker, error) {
 }
 
 func (b *BlockyPlucker) Pluck(
+	ctx context.Context,
 	code string,
 	name string,
 	kind Kind,
@@ -48,7 +50,7 @@ func (b *BlockyPlucker) Pluck(
 	var stderr bytes.Buffer
 	pick := fmt.Sprintf("%s=%s:%s", PickArg, kind, name)
 
-	cmd := exec.Command(PluckCmd, pick)
+	cmd := exec.CommandContext(ctx, PluckCmd, pick)
 	cmd.Stdin = strings.NewReader(code)
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr

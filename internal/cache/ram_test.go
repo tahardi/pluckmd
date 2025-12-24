@@ -1,9 +1,7 @@
-
 package cache_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -41,8 +39,8 @@ func TestRAMCacher(t *testing.T) {
 
 		// then
 		require.Error(t, err)
-		assert.True(t, errors.Is(err, cache.ErrRAMCacher))
-		assert.True(t, errors.Is(err, cache.ErrURINotFound))
+		require.ErrorIs(t, err, cache.ErrRAMCacher)
+		require.ErrorIs(t, err, cache.ErrURINotFound)
 		assert.Contains(t, err.Error(), uri)
 	})
 
@@ -65,7 +63,7 @@ func TestRAMCacher(t *testing.T) {
 
 		// then
 		require.Error(t, retrieveErr)
-		assert.True(t, errors.Is(retrieveErr, cache.ErrURINotFound))
+		assert.ErrorIs(t, retrieveErr, cache.ErrURINotFound)
 	})
 
 	t.Run("initialize with existing vault", func(t *testing.T) {

@@ -18,16 +18,17 @@ var mainCmd = &cobra.Command{
 	Use:          "pluckmd",
 	Short:        "CLI tool for downloading and inserting Go code into markdown docs",
 	SilenceUsage: true,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		runner, err := run.NewRunner()
 		if err != nil {
 			return err
 		}
 
-		ctx, _ := context.WithTimeout(
+		ctx, cancel := context.WithTimeout(
 			context.Background(),
 			time.Duration(timeout)*time.Second,
 		)
+		defer cancel()
 		return runner.Run(ctx, dir)
 	},
 }

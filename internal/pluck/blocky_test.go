@@ -1,6 +1,7 @@
 package pluck_test
 
 import (
+	"context"
 	_ "embed"
 	"testing"
 
@@ -13,6 +14,7 @@ const (
 	blockyPluckerSnippet      = `type BlockyPlucker struct{}`
 	blockyPluckerPluck        = "BlockyPlucker.Pluck"
 	blockyPluckerPluckSnippet = `func (b *BlockyPlucker) Pluck(
+	ctx context.Context,
 	code string,
 	name string,
 	kind Kind,
@@ -25,7 +27,7 @@ const (
 	var stderr bytes.Buffer
 	pick := fmt.Sprintf("%s=%s:%s", PickArg, kind, name)
 
-	cmd := exec.Command(PluckCmd, pick)
+	cmd := exec.CommandContext(ctx, PluckCmd, pick)
 	cmd.Stdin = strings.NewReader(code)
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
@@ -49,6 +51,7 @@ var blockyGo string
 func TestBlockyPlucker_Pluck(t *testing.T) {
 	t.Run("happy path - BlockyPlucker (type)", func(t *testing.T) {
 		// given
+		ctx := context.Background()
 		code := blockyGo
 		name := blockyPlucker
 		kind := pluck.Type
@@ -57,7 +60,7 @@ func TestBlockyPlucker_Pluck(t *testing.T) {
 		require.NoError(t, err)
 
 		// when
-		got, err := plucker.Pluck(code, name, kind)
+		got, err := plucker.Pluck(ctx, code, name, kind)
 
 		// then
 		require.NoError(t, err)
@@ -65,6 +68,8 @@ func TestBlockyPlucker_Pluck(t *testing.T) {
 	})
 
 	t.Run("happy path - BlockyPlucker.Pluck (func)", func(t *testing.T) {
+		// given
+		ctx := context.Background()
 		code := blockyGo
 		name := blockyPluckerPluck
 		kind := pluck.Func
@@ -73,7 +78,7 @@ func TestBlockyPlucker_Pluck(t *testing.T) {
 		require.NoError(t, err)
 
 		// when
-		got, err := plucker.Pluck(code, name, kind)
+		got, err := plucker.Pluck(ctx, code, name, kind)
 
 		// then
 		require.NoError(t, err)
@@ -81,6 +86,8 @@ func TestBlockyPlucker_Pluck(t *testing.T) {
 	})
 
 	t.Run("error - invalid kind", func(t *testing.T) {
+		// given
+		ctx := context.Background()
 		code := blockyGo
 		name := blockyPluckerPluck
 		kind := pluck.Kind("invalid")
@@ -88,13 +95,15 @@ func TestBlockyPlucker_Pluck(t *testing.T) {
 		require.NoError(t, err)
 
 		// when
-		_, err = plucker.Pluck(code, name, kind)
+		_, err = plucker.Pluck(ctx, code, name, kind)
 
 		// then
 		require.Error(t, err)
 	})
 
 	t.Run("error - type/func not in code", func(t *testing.T) {
+		// given
+		ctx := context.Background()
 		code := blockyGo
 		name := "funcDoesNotExist"
 		kind := pluck.Func
@@ -102,7 +111,24 @@ func TestBlockyPlucker_Pluck(t *testing.T) {
 		require.NoError(t, err)
 
 		// when
-		_, err = plucker.Pluck(code, name, kind)
+		_, err = plucker.Pluck(ctx, code, name, kind)
+
+		// then
+		require.Error(t, err)
+	})
+
+	t.Run("error - context canceled", func(t *testing.T) {
+		// given
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		code := blockyGo
+		name := blockyPluckerPluck
+		kind := pluck.Func
+		plucker, err := pluck.NewBlockyPlucker()
+		require.NoError(t, err)
+
+		// when
+		_, err = plucker.Pluck(ctx, code, name, kind)
 
 		// then
 		require.Error(t, err)

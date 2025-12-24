@@ -107,22 +107,25 @@ func (s *Snippet) Partial(start int, end int) (string, error) {
 
 	// If we are skipping the beginning of the body, add an Ellipses line to
 	// indicate that there is hidden code we are not including.
-	snippet := s.Definition() + OpeningBrace
+	var snippet strings.Builder
+	snippet.WriteString(s.Definition())
+	snippet.WriteString(OpeningBrace)
 	if start != 0 {
-		snippet += EllipsesLine
+		snippet.WriteString(EllipsesLine)
 	}
 
 	for i := start; i < end; i++ {
-		snippet += s.bodyLines[i] + "\n"
+		snippet.WriteString(s.bodyLines[i])
+		snippet.WriteString("\n")
 	}
 
 	// If we are skipping the end of the body, add an Ellipses line to indicate
 	// that there is hidden code we are not including.
 	if end != s.length {
-		snippet += EllipsesLine
+		snippet.WriteString(EllipsesLine)
 	}
-	snippet += ClosingBrace
-	return snippet, nil
+	snippet.WriteString(ClosingBrace)
+	return snippet.String(), nil
 }
 
 func ParseSnippet(snippet string) (string, string, error) {
