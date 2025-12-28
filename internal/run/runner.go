@@ -15,7 +15,7 @@ import (
 
 const (
 	DefaultPermissions = 0644
-	MarkdownExt = ".md"
+	MarkdownExt        = ".md"
 )
 
 var (
@@ -32,16 +32,22 @@ func NewRunner() (*Runner, error) {
 		return nil, err
 	}
 
-	fetcher, err := fetch.NewGitHubFetcher()
+	ghFetcher, err := fetch.NewGitHubFetcher()
 	if err != nil {
 		return nil, err
 	}
+
+	lFetcher, err := fetch.NewLocalFetcher()
+	if err != nil {
+		return nil, err
+	}
+	fetchers := []fetch.Fetcher{ghFetcher, lFetcher}
 
 	plucker, err := pluck.NewBlockyPlucker()
 	if err != nil {
 		return nil, err
 	}
-	return NewRunnerWithProcessor(process.NewProcessor(cacher, fetcher, plucker))
+	return NewRunnerWithProcessor(process.NewProcessor(cacher, fetchers, plucker))
 }
 
 func NewRunnerWithProcessor(processor *process.Processor) (*Runner, error) {

@@ -24,17 +24,17 @@ var (
 )
 
 type Processor struct {
-	cacher  cache.Cacher
-	fetcher fetch.Fetcher
-	plucker pluck.Plucker
+	cacher   cache.Cacher
+	fetchers []fetch.Fetcher
+	plucker  pluck.Plucker
 }
 
 func NewProcessor(
 	cacher cache.Cacher,
-	fetcher fetch.Fetcher,
+	fetchers []fetch.Fetcher,
 	plucker pluck.Plucker,
 ) *Processor {
-	return &Processor{cacher: cacher, fetcher: fetcher, plucker: plucker}
+	return &Processor{cacher: cacher, fetchers: fetchers, plucker: plucker}
 }
 
 func (p *Processor) ProcessMarkdown(
@@ -151,7 +151,7 @@ func (p *Processor) GetSourceCode(
 		)
 	}
 
-	sourceCode, err = p.fetcher.Fetch(ctx, directive.SourceCodeURI())
+	sourceCode, err = p.Fetch(ctx, directive)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"%w: fetching source bytes: %w",
@@ -169,6 +169,22 @@ func (p *Processor) GetSourceCode(
 		)
 	}
 	return sourceCode, nil
+}
+
+func (p *Processor) Fetch(ctx context.Context, directive *Directive) ([]byte, error) {
+	errs := []error{}
+	for _, fetcher := range p.fetchers {
+		sourceCode, err := fetcher.Fetch(ctx, directive.SourceCodeURI())
+		if err == nil {
+			return sourceCode, nil
+		}
+		errs = append(errs, fmt.Errorf(
+			"%w: fetching source bytes: %w",
+			ErrProcessor,
+			err),
+		)
+	}
+	return nil, errors.Join(errs...)
 }
 
 func WriteCodeBlock(

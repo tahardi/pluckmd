@@ -10,7 +10,7 @@ import (
 	"github.com/tahardi/pluckmd/internal/fetch"
 )
 
-const fetcherGitHubURI = "https://github.com/tahardi/pluckmd/blob/main/internal/fetch/github.go"
+const gitHubFetcherURI = "https://github.com/tahardi/pluckmd/blob/main/internal/fetch/github.go"
 
 //go:embed github.go
 var githubGo []byte
@@ -20,7 +20,7 @@ func TestGitHubFetcher_Fetch(t *testing.T) {
 		// given
 		ctx := context.Background()
 		want := githubGo
-		uri := fetcherGitHubURI
+		uri := gitHubFetcherURI
 		fetcher, err := fetch.NewGitHubFetcher()
 		require.NoError(t, err)
 
@@ -36,7 +36,7 @@ func TestGitHubFetcher_Fetch(t *testing.T) {
 		// given
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
-		uri := fetcherGitHubURI
+		uri := gitHubFetcherURI
 		fetcher, err := fetch.NewGitHubFetcher()
 		require.NoError(t, err)
 
