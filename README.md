@@ -171,3 +171,41 @@ immediately precedes it.
 - \[start, end) indicates the range of lines within the code block to include in the output
 - `-1, -1` indicates that the entire code block should be excluded from the output
 - `0, 0` indicates that the entire code block should be included in the output
+
+#### Local File Fetcher
+
+There are two ways that `pluckmd` tries to fetch source code files. The first is
+with `GitHubFetcher`, which downloads and reads a source code file for a given
+URL. The second uses `LocalFetcher`, which opens and reads a source code file
+on the local system given an absolute or relative path. The important thing to
+note about`LocalFetcher` is that relative paths are assumed to be relative _to
+the directory in which `pluckmd` is being run._
+
+For example, this repository has a makefile target for running `pluckmd` to
+(re-)generate code blocks in our README.md. Thus, let's assume that `pluckmd`
+is always run from the top-level of this repository. We would update the
+`BlockyPluck.Pluck` URI's from the earlier example to specify the file using a
+path relative to the top-level directory of our repository:
+
+```
+pluck("function", "BlockyPlucker.Pluck", "internal/pluck/blocky.go", -1, -1)
+```
+
+<!-- pluck("function", "BlockyPlucker.Pluck", "internal/pluck/blocky.go", -1, -1) -->
+```go
+func (b *BlockyPlucker) Pluck(
+	ctx context.Context,
+	code string,
+	name string,
+	kind Kind,
+) (string, error) {
+	// ...
+}
+```
+
+The local fetcher is useful when you want to include documentation not yet
+tracked in a remote repository. For example, you may be working on a feature
+branch that introduces a new function. Using remote URLs, you would have to
+first commit and push the function to the remote respository before running
+`pluckmd`to update your documentation. Otherwise, it would fail to find the
+function, or it might pull an out-of-date version.
