@@ -43,11 +43,15 @@ func NewRunner() (*Runner, error) {
 	}
 	fetchers := []fetch.Fetcher{ghFetcher, lFetcher}
 
-	plucker, err := pluck.NewBlockyPlucker()
+	goPlucker, err := pluck.NewGoPlucker()
 	if err != nil {
 		return nil, err
 	}
-	return NewRunnerWithProcessor(process.NewProcessor(cacher, fetchers, plucker))
+	pluckers := map[pluck.Lang]pluck.Plucker{
+		pluck.Go: goPlucker,
+	}
+
+	return NewRunnerWithProcessor(process.NewProcessor(cacher, fetchers, pluckers))
 }
 
 func NewRunnerWithProcessor(processor *process.Processor) (*Runner, error) {

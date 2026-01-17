@@ -12,10 +12,11 @@ PluckMD scans Markdown files looking for comments containing "pluck directives",
 where a directive is defined as:
 
 ```
-pluck("kind", "name", "source", start, end)
+pluck("lang", "kind", "name", "source", start, end)
 ```
 
-- `kind` can either be "type" or "function"
+- `lang` can be "go" or "yaml"
+- `kind` can be "file", "func", "node", or "type"
 - `name` is the name of the type or function to pluck
 - `source` is the GitHub URL of the source file containing the type or function
 - `start` and `end` are line numbers indicating the range of lines within the
@@ -31,7 +32,7 @@ documentation.
 pluck("function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", -1, -1)
 ```
 
-<!-- pluck("function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", -1, -1) -->
+<!-- pluck("go", "function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", -1, -1) -->
 ```go
 func (b *BlockyPlucker) Pluck(
 	ctx context.Context,
@@ -49,7 +50,7 @@ that! It does add a small comment, however, to indicate that there is hidden
 code. This can be very useful when you want to walk a user through a specific
 function or type, but don't want to include the entire body all at once.
 
-<!-- pluck("function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", 0, 3) -->
+<!-- pluck("go", "function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", 0, 3) -->
 ```go
 func (b *BlockyPlucker) Pluck(
 	ctx context.Context,
@@ -66,7 +67,7 @@ func (b *BlockyPlucker) Pluck(
 
 Instead, we can selectively include the relevant lines for any given step...
 
-<!-- pluck("function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", 4, 12) -->
+<!-- pluck("go", "function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", 4, 12) -->
 ```go
 func (b *BlockyPlucker) Pluck(
 	ctx context.Context,
@@ -89,7 +90,7 @@ func (b *BlockyPlucker) Pluck(
 
 ...as we work our way through the function...
 
-<!-- pluck("function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", 13, 23) -->
+<!-- pluck("go", "function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", 13, 23) -->
 ```go
 func (b *BlockyPlucker) Pluck(
 	ctx context.Context,
@@ -113,7 +114,7 @@ func (b *BlockyPlucker) Pluck(
 
 ...until we reach the end.
 
-<!-- pluck("function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", 0, 0) -->
+<!-- pluck("go", "function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", 0, 0) -->
 ```go
 func (b *BlockyPlucker) Pluck(
 	ctx context.Context,
@@ -184,16 +185,16 @@ the directory in which `pluckmd` is being run._
 For example, this repository has a makefile target for running `pluckmd` to
 (re-)generate code blocks in our README.md. Thus, let's assume that `pluckmd`
 is always run from the top-level of this repository. We would update the
-`BlockyPluck.Pluck` URI's from the earlier example to specify the file using a
+`GoPluck.Pluck` URI's from the earlier example to specify the file using a
 path relative to the top-level directory of our repository:
 
 ```
-pluck("function", "BlockyPlucker.Pluck", "internal/pluck/blocky.go", -1, -1)
+pluck("go", "function", "GoPlucker.Pluck", "internal/pluck/goplucker.go", -1, -1)
 ```
 
-<!-- pluck("function", "BlockyPlucker.Pluck", "internal/pluck/blocky.go", -1, -1) -->
+<!-- pluck("go", "function", "GoPlucker.Pluck", "internal/pluck/goplucker.go", -1, -1) -->
 ```go
-func (b *BlockyPlucker) Pluck(
+func (g *GoPlucker) Pluck(
 	ctx context.Context,
 	code string,
 	name string,

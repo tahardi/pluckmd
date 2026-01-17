@@ -11,6 +11,7 @@ import (
 	"github.com/tahardi/pluckmd/internal/cache"
 	"github.com/tahardi/pluckmd/internal/fetch"
 	"github.com/tahardi/pluckmd/internal/pluck"
+	"github.com/tahardi/pluckmd/internal/snip"
 )
 
 const (
@@ -26,15 +27,15 @@ var (
 type Processor struct {
 	cacher   cache.Cacher
 	fetchers []fetch.Fetcher
-	plucker  pluck.Plucker
+	pluckers map[pluck.Lang]pluck.Plucker
 }
 
 func NewProcessor(
 	cacher cache.Cacher,
 	fetchers []fetch.Fetcher,
-	plucker pluck.Plucker,
+	pluckers map[pluck.Lang]pluck.Plucker,
 ) *Processor {
-	return &Processor{cacher: cacher, fetchers: fetchers, plucker: plucker}
+	return &Processor{cacher: cacher, fetchers: fetchers, pluckers: pluckers}
 }
 
 func (p *Processor) ProcessMarkdown(
@@ -62,15 +63,10 @@ func (p *Processor) ProcessMarkdown(
 
 		snippet, err := p.GetCodeSnippet(ctx, directive)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: getting snippet: %w", ErrProcessor, err)
 		}
 
-		code, err := snippet.Partial(directive.start, directive.end)
-		if err != nil {
-			return nil, fmt.Errorf("%w: getting partial code: %w", ErrProcessor, err)
-		}
-
-		err = WriteCodeBlock(&processed, directiveLine, code)
+		err = WriteCodeBlock(&processed, directiveLine, snippet)
 		if err != nil {
 			return nil, fmt.Errorf("%w: writing code block: %w", ErrProcessor, err)
 		}
@@ -92,15 +88,42 @@ func (p *Processor) ProcessMarkdown(
 func (p *Processor) GetCodeSnippet(
 	ctx context.Context,
 	directive *Directive,
-) (*pluck.Snippet, error) {
+) (string, error) {
+	fullSnippet, err := p.GetFullCodeSnippet(ctx, directive)
+	if err != nil {
+		return "", err
+	}
+
+	var snipper snip.Snipper
+	switch directive.Lang() {
+	case pluck.Go:
+		snipper, err = snip.NewGoSnipper(directive.Name(), fullSnippet)
+		if err != nil {
+			return "", fmt.Errorf("%w: creating go snipper: %w", ErrProcessor, err)
+		}
+	case pluck.YAML:
+		snipper, err = snip.NewYAMLSnipper(directive.Name(), fullSnippet)
+		if err != nil {
+			return "", fmt.Errorf("%w: creating yaml snipper: %w", ErrProcessor, err)
+		}
+	default:
+		return "", fmt.Errorf("%w: unsupported lang: %s", ErrProcessor, directive.Lang())
+	}
+	return snipper.Snippet(directive.start, directive.end)
+}
+
+func (p *Processor) GetFullCodeSnippet(
+	ctx context.Context,
+	directive *Directive,
+) (string, error) {
 	snippetBytes, err := p.cacher.Retrieve(ctx, directive.CodeSnippetURI())
 	switch {
 	case err == nil:
-		return pluck.NewSnippet(directive.Name(), string(snippetBytes))
+		return string(snippetBytes), nil
 	case errors.Is(err, cache.ErrURINotFound):
 		break
 	default:
-		return nil, fmt.Errorf(
+		return "", fmt.Errorf(
 			"%w: retrieving snippet bytes: %w",
 			ErrProcessor,
 			err,
@@ -109,28 +132,33 @@ func (p *Processor) GetCodeSnippet(
 
 	sourceCode, err := p.GetSourceCode(ctx, directive)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	snippetString, err := p.plucker.Pluck(
+	plucker, exists := p.pluckers[directive.Lang()]
+	if !exists {
+		return "", fmt.Errorf("%w: no plucker for lang: %s", ErrProcessor, directive.Lang())
+	}
+
+	snippetString, err := plucker.Pluck(
 		ctx,
 		string(sourceCode),
 		directive.Name(),
 		directive.Kind(),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("%w: plucking snippet: %w", ErrProcessor, err)
+		return "", fmt.Errorf("%w: plucking snippet: %w", ErrProcessor, err)
 	}
 
 	err = p.cacher.Store(ctx, directive.CodeSnippetURI(), []byte(snippetString))
 	if err != nil {
-		return nil, fmt.Errorf(
+		return "", fmt.Errorf(
 			"%w: storing snippet bytes: %w",
 			ErrProcessor,
 			err,
 		)
 	}
-	return pluck.NewSnippet(directive.Name(), snippetString)
+	return snippetString, nil
 }
 
 func (p *Processor) GetSourceCode(

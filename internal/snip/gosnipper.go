@@ -1,4 +1,4 @@
-package pluck
+package snip
 
 import (
 	"errors"
@@ -10,21 +10,17 @@ import (
 )
 
 const (
-	EmptyStart   = -1
-	EmptyEnd     = -1
-	FullStart    = 0
-	FullEnd      = 0
 	EllipsesLine = "\t// ...\n"
 	OpeningBrace = "{\n"
 	ClosingBrace = "}\n"
 )
 
 var (
-	ErrSnippet              = errors.New("snippet")
+	ErrGoSnipper            = errors.New("go snipper")
 	ErrOpeningBraceNotFound = errors.New("finding opening brace")
 )
 
-type Snippet struct {
+type GoSnipper struct {
 	name       string
 	definition string
 	body       string
@@ -32,20 +28,20 @@ type Snippet struct {
 	length     int
 }
 
-func NewSnippet(name string, snippet string) (*Snippet, error) {
-	definition, body, err := ParseSnippet(snippet)
+func NewGoSnipper(name string, snippet string) (*GoSnipper, error) {
+	definition, body, err := ParseGoSnippet(snippet)
 	if err != nil {
-		return nil, fmt.Errorf("%w: parsing snippet: %w", ErrSnippet, err)
+		return nil, fmt.Errorf("%w: parsing snippet: %w", ErrGoSnipper, err)
 	}
-	return NewSnippetWithDefinitionAndBody(name, definition, body)
+	return NewGoSnipperWithDefinitionAndBody(name, definition, body)
 }
 
-func NewSnippetWithDefinitionAndBody(
+func NewGoSnipperWithDefinitionAndBody(
 	name string,
 	definition string,
 	body string,
-) (*Snippet, error) {
-	return &Snippet{
+) (*GoSnipper, error) {
+	return &GoSnipper{
 		name:       name,
 		definition: definition,
 		body:       body,
@@ -54,31 +50,31 @@ func NewSnippetWithDefinitionAndBody(
 	}, nil
 }
 
-func (s *Snippet) Name() string {
-	return s.name
+func (g *GoSnipper) Name() string {
+	return g.name
 }
 
-func (s *Snippet) Definition() string {
-	return s.definition
+func (g *GoSnipper) Definition() string {
+	return g.definition
 }
 
-func (s *Snippet) Body() string {
-	return s.body
+func (g *GoSnipper) Body() string {
+	return g.body
 }
 
-func (s *Snippet) Full() string {
-	return s.definition + OpeningBrace + s.body + ClosingBrace
+func (g *GoSnipper) Full() string {
+	return g.definition + OpeningBrace + g.body + ClosingBrace
 }
 
-func (s *Snippet) Empty() string {
-	return s.definition + OpeningBrace + EllipsesLine + ClosingBrace
+func (g *GoSnipper) Empty() string {
+	return g.definition + OpeningBrace + EllipsesLine + ClosingBrace
 }
 
-func (s *Snippet) Partial(start int, end int) (string, error) {
+func (g *GoSnipper) Snippet(start int, end int) (string, error) {
 	// Lazy initialization of bodyLines. Sometimes we end up with empty lines
 	// at the beginning and ending of the body. If so, remove them.
-	if s.bodyLines == nil {
-		lines := strings.Split(s.body, "\n")
+	if g.bodyLines == nil {
+		lines := strings.Split(g.body, "\n")
 		if len(lines) > 0 {
 			if lines[0] == "" {
 				lines = lines[1:]
@@ -87,19 +83,19 @@ func (s *Snippet) Partial(start int, end int) (string, error) {
 				lines = lines[:len(lines)-1]
 			}
 		}
-		s.bodyLines = lines
-		s.length = len(lines)
+		g.bodyLines = lines
+		g.length = len(lines)
 	}
 
 	switch {
 	case start == EmptyStart && end == EmptyEnd:
-		return s.Empty(), nil
+		return g.Empty(), nil
 	case start == FullStart && end == FullEnd:
-		return s.Full(), nil
-	case start < 0 || end < 0 || start > end || end > s.length:
+		return g.Full(), nil
+	case start < 0 || end < 0 || start > end || end > g.length:
 		return "", fmt.Errorf(
 			"%w: invalid range [start: %d, end: %d)",
-			ErrSnippet,
+			ErrGoSnipper,
 			start,
 			end,
 		)
@@ -108,27 +104,27 @@ func (s *Snippet) Partial(start int, end int) (string, error) {
 	// If we are skipping the beginning of the body, add an Ellipses line to
 	// indicate that there is hidden code we are not including.
 	var snippet strings.Builder
-	snippet.WriteString(s.Definition())
+	snippet.WriteString(g.Definition())
 	snippet.WriteString(OpeningBrace)
 	if start != 0 {
 		snippet.WriteString(EllipsesLine)
 	}
 
 	for i := start; i < end; i++ {
-		snippet.WriteString(s.bodyLines[i])
+		snippet.WriteString(g.bodyLines[i])
 		snippet.WriteString("\n")
 	}
 
 	// If we are skipping the end of the body, add an Ellipses line to indicate
 	// that there is hidden code we are not including.
-	if end != s.length {
+	if end != g.length {
 		snippet.WriteString(EllipsesLine)
 	}
 	snippet.WriteString(ClosingBrace)
 	return snippet.String(), nil
 }
 
-func ParseSnippet(snippet string) (string, string, error) {
+func ParseGoSnippet(snippet string) (string, string, error) {
 	fset := token.NewFileSet()
 
 	// Wrap snippet in a package to make it a valid Go file for the parser
