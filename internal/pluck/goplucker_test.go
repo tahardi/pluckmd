@@ -10,24 +10,29 @@ import (
 )
 
 const (
-	blockyPlucker             = "BlockyPlucker"
-	blockyPluckerSnippet      = `type BlockyPlucker struct{}`
-	blockyPluckerPluck        = "BlockyPlucker.Pluck"
-	blockyPluckerPluckSnippet = `func (b *BlockyPlucker) Pluck(
+	goPlucker             = "GoPlucker"
+	goPluckerSnippet      = `type GoPlucker struct{}`
+	goPluckerPluck        = "GoPlucker.Pluck"
+	goPluckerPluckSnippet = `func (g *GoPlucker) Pluck(
 	ctx context.Context,
 	code string,
 	name string,
 	kind Kind,
 ) (string, error) {
-	if !kind.Valid() {
-		return "", fmt.Errorf("%w: invalid kind '%s'", ErrBlockyPlucker, kind)
+	switch kind {
+	case File:
+		return code, nil
+	case Func, Type:
+		break
+	default:
+		return "", fmt.Errorf("%w: unsupported kind: %v", ErrGoPlucker, kind)
 	}
 
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	pick := fmt.Sprintf("%s=%s:%s", PickArg, kind, name)
 
-	cmd := exec.CommandContext(ctx, PluckCmd, pick)
+	cmd := exec.CommandContext(ctx, GoPluckCmd, pick)
 	cmd.Stdin = strings.NewReader(code)
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
@@ -36,8 +41,8 @@ const (
 	if err != nil {
 		return "", fmt.Errorf(
 			"%w: running %s: %s",
-			ErrBlockyPlucker,
-			PluckCmd,
+			ErrGoPlucker,
+			GoPluckCmd,
 			stderr.String(),
 		)
 	}
@@ -45,18 +50,18 @@ const (
 }`
 )
 
-//go:embed blocky.go
-var blockyGo string
+//go:embed goplucker.go
+var goPluckerSource string
 
-func TestBlockyPlucker_Pluck(t *testing.T) {
-	t.Run("happy path - BlockyPlucker (type)", func(t *testing.T) {
+func TestGoPlucker_Pluck(t *testing.T) {
+	t.Run("happy path - GoPlucker (type)", func(t *testing.T) {
 		// given
 		ctx := context.Background()
-		code := blockyGo
-		name := blockyPlucker
+		code := goPluckerSource
+		name := goPlucker
 		kind := pluck.Type
-		want := blockyPluckerSnippet + "\n"
-		plucker, err := pluck.NewBlockyPlucker()
+		want := goPluckerSnippet + "\n"
+		plucker, err := pluck.NewGoPlucker()
 		require.NoError(t, err)
 
 		// when
@@ -67,14 +72,14 @@ func TestBlockyPlucker_Pluck(t *testing.T) {
 		require.Equal(t, want, got)
 	})
 
-	t.Run("happy path - BlockyPlucker.Pluck (func)", func(t *testing.T) {
+	t.Run("happy path - GoPlucker.Pluck (func)", func(t *testing.T) {
 		// given
 		ctx := context.Background()
-		code := blockyGo
-		name := blockyPluckerPluck
+		code := goPluckerSource
+		name := goPluckerPluck
 		kind := pluck.Func
-		want := blockyPluckerPluckSnippet + "\n"
-		plucker, err := pluck.NewBlockyPlucker()
+		want := goPluckerPluckSnippet + "\n"
+		plucker, err := pluck.NewGoPlucker()
 		require.NoError(t, err)
 
 		// when
@@ -85,13 +90,13 @@ func TestBlockyPlucker_Pluck(t *testing.T) {
 		require.Equal(t, want, got)
 	})
 
-	t.Run("error - invalid kind", func(t *testing.T) {
+	t.Run("error - unsupported kind", func(t *testing.T) {
 		// given
 		ctx := context.Background()
-		code := blockyGo
-		name := blockyPluckerPluck
-		kind := pluck.Kind("invalid")
-		plucker, err := pluck.NewBlockyPlucker()
+		code := goPluckerSource
+		name := goPluckerPluck
+		kind := pluck.Node
+		plucker, err := pluck.NewGoPlucker()
 		require.NoError(t, err)
 
 		// when
@@ -104,10 +109,10 @@ func TestBlockyPlucker_Pluck(t *testing.T) {
 	t.Run("error - type/func not in code", func(t *testing.T) {
 		// given
 		ctx := context.Background()
-		code := blockyGo
+		code := goPluckerSource
 		name := "funcDoesNotExist"
 		kind := pluck.Func
-		plucker, err := pluck.NewBlockyPlucker()
+		plucker, err := pluck.NewGoPlucker()
 		require.NoError(t, err)
 
 		// when
@@ -121,10 +126,10 @@ func TestBlockyPlucker_Pluck(t *testing.T) {
 		// given
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
-		code := blockyGo
-		name := blockyPluckerPluck
+		code := goPluckerSource
+		name := goPluckerPluck
 		kind := pluck.Func
-		plucker, err := pluck.NewBlockyPlucker()
+		plucker, err := pluck.NewGoPlucker()
 		require.NoError(t, err)
 
 		// when

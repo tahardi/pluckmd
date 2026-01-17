@@ -43,7 +43,7 @@ func NewRunner() (*Runner, error) {
 	}
 	fetchers := []fetch.Fetcher{ghFetcher, lFetcher}
 
-	plucker, err := pluck.NewBlockyPlucker()
+	plucker, err := pluck.NewGoPlucker()
 	if err != nil {
 		return nil, err
 	}

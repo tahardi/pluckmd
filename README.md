@@ -184,16 +184,16 @@ the directory in which `pluckmd` is being run._
 For example, this repository has a makefile target for running `pluckmd` to
 (re-)generate code blocks in our README.md. Thus, let's assume that `pluckmd`
 is always run from the top-level of this repository. We would update the
-`BlockyPluck.Pluck` URI's from the earlier example to specify the file using a
+`GoPluck.Pluck` URI's from the earlier example to specify the file using a
 path relative to the top-level directory of our repository:
 
 ```
-pluck("function", "BlockyPlucker.Pluck", "internal/pluck/blocky.go", -1, -1)
+pluck("function", "GoPlucker.Pluck", "internal/pluck/goplucker.go", -1, -1)
 ```
 
-<!-- pluck("function", "BlockyPlucker.Pluck", "internal/pluck/blocky.go", -1, -1) -->
+<!-- pluck("function", "GoPlucker.Pluck", "internal/pluck/goplucker.go", -1, -1) -->
 ```go
-func (b *BlockyPlucker) Pluck(
+func (g *GoPlucker) Pluck(
 	ctx context.Context,
 	code string,
 	name string,

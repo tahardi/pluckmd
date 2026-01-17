@@ -11,8 +11,8 @@ import (
 func TestSnippet_Full(t *testing.T) {
 	t.Run("happy path", func(t *testing.T) {
 		// given
-		want := blockyPluckerPluckSnippet + "\n"
-		snippet, err := pluck.NewSnippet(blockyPluckerPluck, want)
+		want := goPluckerPluckSnippet + "\n"
+		snippet, err := pluck.NewSnippet(goPluckerPluck, want)
 		require.NoError(t, err)
 
 		// when
@@ -26,11 +26,11 @@ func TestSnippet_Full(t *testing.T) {
 func TestSnippet_Partial(t *testing.T) {
 	t.Run("happy path - no body", func(t *testing.T) {
 		// given
-		snippet, err := pluck.NewSnippet(blockyPluckerPluck, blockyPluckerPluckSnippet)
+		snippet, err := pluck.NewSnippet(goPluckerPluck, goPluckerPluckSnippet)
 		require.NoError(t, err)
 
 		start, end := pluck.EmptyStart, pluck.EmptyEnd
-		want := `func (b *BlockyPlucker) Pluck(
+		want := `func (g *GoPlucker) Pluck(
 	ctx context.Context,
 	code string,
 	name string,
@@ -49,18 +49,23 @@ func TestSnippet_Partial(t *testing.T) {
 
 	t.Run("happy path - start of body", func(t *testing.T) {
 		// given
-		snippet, err := pluck.NewSnippet(blockyPluckerPluck, blockyPluckerPluckSnippet)
+		snippet, err := pluck.NewSnippet(goPluckerPluck, goPluckerPluckSnippet)
 		require.NoError(t, err)
 
-		start, end := 0, 3
-		want := `func (b *BlockyPlucker) Pluck(
+		start, end := 0, 8
+		want := `func (g *GoPlucker) Pluck(
 	ctx context.Context,
 	code string,
 	name string,
 	kind Kind,
 ) (string, error) {
-	if !kind.Valid() {
-		return "", fmt.Errorf("%w: invalid kind '%s'", ErrBlockyPlucker, kind)
+	switch kind {
+	case File:
+		return code, nil
+	case Func, Type:
+		break
+	default:
+		return "", fmt.Errorf("%w: unsupported kind: %v", ErrGoPlucker, kind)
 	}
 	// ...
 }
@@ -75,11 +80,11 @@ func TestSnippet_Partial(t *testing.T) {
 
 	t.Run("happy path - middle of body", func(t *testing.T) {
 		// given
-		snippet, err := pluck.NewSnippet(blockyPluckerPluck, blockyPluckerPluckSnippet)
+		snippet, err := pluck.NewSnippet(goPluckerPluck, goPluckerPluckSnippet)
 		require.NoError(t, err)
 
-		start, end := 4, 12
-		want := `func (b *BlockyPlucker) Pluck(
+		start, end := 9, 17
+		want := `func (g *GoPlucker) Pluck(
 	ctx context.Context,
 	code string,
 	name string,
@@ -90,7 +95,7 @@ func TestSnippet_Partial(t *testing.T) {
 	var stderr bytes.Buffer
 	pick := fmt.Sprintf("%s=%s:%s", PickArg, kind, name)
 
-	cmd := exec.CommandContext(ctx, PluckCmd, pick)
+	cmd := exec.CommandContext(ctx, GoPluckCmd, pick)
 	cmd.Stdin = strings.NewReader(code)
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
@@ -107,11 +112,11 @@ func TestSnippet_Partial(t *testing.T) {
 
 	t.Run("happy path - end of body", func(t *testing.T) {
 		// given
-		snippet, err := pluck.NewSnippet(blockyPluckerPluck, blockyPluckerPluckSnippet)
+		snippet, err := pluck.NewSnippet(goPluckerPluck, goPluckerPluckSnippet)
 		require.NoError(t, err)
 
-		start, end := 13, 23
-		want := `func (b *BlockyPlucker) Pluck(
+		start, end := 18, 28
+		want := `func (g *GoPlucker) Pluck(
 	ctx context.Context,
 	code string,
 	name string,
@@ -122,8 +127,8 @@ func TestSnippet_Partial(t *testing.T) {
 	if err != nil {
 		return "", fmt.Errorf(
 			"%w: running %s: %s",
-			ErrBlockyPlucker,
-			PluckCmd,
+			ErrGoPlucker,
+			GoPluckCmd,
 			stderr.String(),
 		)
 	}
@@ -140,11 +145,11 @@ func TestSnippet_Partial(t *testing.T) {
 
 	t.Run("happy path - full body", func(t *testing.T) {
 		// given
-		snippet, err := pluck.NewSnippet(blockyPluckerPluck, blockyPluckerPluckSnippet)
+		snippet, err := pluck.NewSnippet(goPluckerPluck, goPluckerPluckSnippet)
 		require.NoError(t, err)
 
 		start, end := pluck.FullStart, pluck.FullEnd
-		want := blockyPluckerPluckSnippet + "\n"
+		want := goPluckerPluckSnippet + "\n"
 
 		// when
 		got, err := snippet.Partial(start, end)
