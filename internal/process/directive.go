@@ -10,27 +10,47 @@ import (
 )
 
 const (
-	KindIndex   = 1
-	NameIndex   = 2
-	SourceIndex = 3
-	StartIndex  = 4
-	EndIndex    = 5
-	NumFields   = 6
+	LangIndex   = 1
+	KindIndex   = 2
+	NameIndex   = 3
+	SourceIndex = 4
+	StartIndex  = 5
+	EndIndex    = 6
+	NumFields   = 7
 )
 
 var (
 	ErrDirective = errors.New("pluck")
 
+	// Regex subcomponents for building PluckRegex
+	commentStart = `<!--`
+	commentEnd   = `-->`
+	comma        = `,`
+	optionalWs   = `\s*`
+	pluckName    = `pluck`
+	number       = `(-?\d+)`
+	quotedString = `"([^"]+)"`
+
 	// PluckRegex The pluck directive we look for in md files is of the form:
-	// <!-- pluck("kind", "name", "source", start, end) -->
+	// <!-- pluck("lang", "kind", "name", "source", start, end) -->
 	//
-	//	kind = "type" or "function"
-	//	name = name of the type or function
+	//	lang = "go", "yaml", etc.
+	//	kind = "file", "function", "type", etc.
+	//	name = name of the type/function/node
 	//	source = relative path for local file or remote git URL
 	//  start = integer representing starting line of code body
 	//  end = integer representing ending line of code body
 	// This regex will match with the directive defined above
-	PluckRegex = regexp.MustCompile(`<!--\s*pluck\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*,\s*"([^"]+)"\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*\)\s*-->`)
+	PluckRegex = regexp.MustCompile(
+		commentStart + optionalWs + pluckName + `\(` +
+			optionalWs + quotedString + optionalWs + comma +
+			optionalWs + quotedString + optionalWs + comma +
+			optionalWs + quotedString + optionalWs + comma +
+			optionalWs + quotedString + optionalWs + comma +
+			optionalWs + number + optionalWs + comma +
+			optionalWs + number + optionalWs +
+			`\)` + optionalWs + commentEnd,
+	)
 )
 
 func ContainsPluckDirective(line string) bool {
@@ -39,6 +59,7 @@ func ContainsPluckDirective(line string) bool {
 }
 
 type Directive struct {
+	lang   pluck.Lang
 	kind   pluck.Kind
 	name   string
 	source string
@@ -61,18 +82,28 @@ func NewDirective(line string) (*Directive, error) {
 		return nil, fmt.Errorf("%w: invalid end index: %s", ErrDirective, line)
 	}
 
+	lang := pluck.Lang(fields[LangIndex])
+	if !lang.Valid() {
+		return nil, fmt.Errorf("%w: invalid lang: %s", ErrDirective, line)
+	}
+
 	kind := pluck.Kind(fields[KindIndex])
 	if !kind.Valid() {
 		return nil, fmt.Errorf("%w: invalid kind: %s", ErrDirective, line)
 	}
 
 	return &Directive{
+		lang:   lang,
 		kind:   kind,
 		name:   fields[NameIndex],
 		source: fields[SourceIndex],
 		start:  start,
 		end:    end,
 	}, nil
+}
+
+func (d *Directive) Lang() pluck.Lang {
+	return d.lang
 }
 
 func (d *Directive) Kind() pluck.Kind {

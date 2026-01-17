@@ -15,17 +15,17 @@ func TestNewDirective(t *testing.T) {
 	}{
 		{
 			name:    "valid - standard type",
-			line:    `<!-- pluck("type", "Verifier", "tee/verifier.go", 0, 0) -->`,
+			line:    `<!-- pluck("go", "type", "Verifier", "tee/verifier.go", 0, 0) -->`,
 			wantErr: false,
 		},
 		{
 			name:    "valid - function with negative indices",
-			line:    `<!-- pluck("function", "Verify", "tee/verifier.go", -1, -1) -->`,
+			line:    `<!-- pluck("go", "function", "Verify", "tee/verifier.go", -1, -1) -->`,
 			wantErr: false,
 		},
 		{
 			name:    "valid - messy spacing",
-			line:    `<!--pluck(  "type"  ,"Name"  ,  "path" , 0 , 0 )-->`,
+			line:    `<!--pluck(   "go" ,  "type"  ,"Name"  ,  "path" , 0 , 0 )-->`,
 			wantErr: false,
 		},
 		{
@@ -35,12 +35,17 @@ func TestNewDirective(t *testing.T) {
 		},
 		{
 			name:    "invalid - non-integer index",
-			line:    `<!-- pluck("type", "Name", "path", 0, "end") -->`,
+			line:    `<!-- pluck("go", "type", "Name", "path", 0, "end") -->`,
+			wantErr: true,
+		},
+		{
+			name:    "invalid - unknown lang",
+			line:    `<!-- pluck("not-a-lang", "type", "Name", "path", 0, 0) -->`,
 			wantErr: true,
 		},
 		{
 			name:    "invalid - unknown kind",
-			line:    `<!-- pluck("not-a-kind", "Name", "path", 0, 0) -->`,
+			line:    `<!-- pluck("go", "not-a-kind", "Name", "path", 0, 0) -->`,
 			wantErr: true,
 		},
 	}
