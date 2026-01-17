@@ -10,10 +10,6 @@ import (
 )
 
 const (
-	EmptyStart   = -1
-	EmptyEnd     = -1
-	FullStart    = 0
-	FullEnd      = 0
 	EllipsesLine = "\t// ...\n"
 	OpeningBrace = "{\n"
 	ClosingBrace = "}\n"
@@ -74,7 +70,7 @@ func (g *GoSnipper) Empty() string {
 	return g.definition + OpeningBrace + EllipsesLine + ClosingBrace
 }
 
-func (g *GoSnipper) Partial(start int, end int) (string, error) {
+func (g *GoSnipper) Snippet(start int, end int) (string, error) {
 	// Lazy initialization of bodyLines. Sometimes we end up with empty lines
 	// at the beginning and ending of the body. If so, remove them.
 	if g.bodyLines == nil {

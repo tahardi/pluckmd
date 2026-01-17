@@ -61,14 +61,14 @@ func (p *Processor) ProcessMarkdown(
 			return nil, fmt.Errorf("%w: creating directive: %w", ErrProcessor, err)
 		}
 
-		snippet, err := p.GetCodeSnippet(ctx, directive)
+		snipper, err := p.MakeCodeSnipper(ctx, directive)
 		if err != nil {
 			return nil, err
 		}
 
-		code, err := snippet.Partial(directive.start, directive.end)
+		code, err := snipper.Snippet(directive.start, directive.end)
 		if err != nil {
-			return nil, fmt.Errorf("%w: getting partial code: %w", ErrProcessor, err)
+			return nil, fmt.Errorf("%w: getting snippet: %w", ErrProcessor, err)
 		}
 
 		err = WriteCodeBlock(&processed, directiveLine, code)
@@ -90,10 +90,10 @@ func (p *Processor) ProcessMarkdown(
 	return processed.Bytes(), nil
 }
 
-func (p *Processor) GetCodeSnippet(
+func (p *Processor) MakeCodeSnipper(
 	ctx context.Context,
 	directive *Directive,
-) (*snip.GoSnipper, error) {
+) (snip.Snipper, error) {
 	snippetBytes, err := p.cacher.Retrieve(ctx, directive.CodeSnippetURI())
 	switch {
 	case err == nil:

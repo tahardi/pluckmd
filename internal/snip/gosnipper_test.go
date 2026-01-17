@@ -81,7 +81,7 @@ func TestGoSnippet_Partial(t *testing.T) {
 }
 `
 		// when
-		got, err := snippet.Partial(start, end)
+		got, err := snippet.Snippet(start, end)
 
 		// then
 		require.NoError(t, err)
@@ -114,7 +114,7 @@ func TestGoSnippet_Partial(t *testing.T) {
 }
 `
 		// when
-		got, err := snippet.Partial(start, end)
+		got, err := snippet.Snippet(start, end)
 
 		// then
 		require.NoError(t, err)
@@ -146,7 +146,7 @@ func TestGoSnippet_Partial(t *testing.T) {
 }
 `
 		// when
-		got, err := snippet.Partial(start, end)
+		got, err := snippet.Snippet(start, end)
 
 		// then
 		require.NoError(t, err)
@@ -179,7 +179,7 @@ func TestGoSnippet_Partial(t *testing.T) {
 }
 `
 		// when
-		got, err := snippet.Partial(start, end)
+		got, err := snippet.Snippet(start, end)
 
 		// then
 		require.NoError(t, err)
@@ -195,7 +195,7 @@ func TestGoSnippet_Partial(t *testing.T) {
 		want := goPluckerPluckSnippet + "\n"
 
 		// when
-		got, err := snippet.Partial(start, end)
+		got, err := snippet.Snippet(start, end)
 
 		// then
 		require.NoError(t, err)
