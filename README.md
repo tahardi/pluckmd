@@ -24,17 +24,17 @@ type or function body to include in the output
 
 
 Let's demonstrate this with an example. There is a file in our repository called
-`blocky.go` that contains a `BlockyPlucker` type with a `Pluck` function. We
+`goplucker.go` that contains a `GoPlucker` type with a `Pluck` function. We
 are going to use PluckMD to extract the `Pluck` function and include it in our
 documentation.
 
 ```
-pluck("function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", -1, -1)
+pluck("function", "GoPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/goplucker.go", -1, -1)
 ```
 
-<!-- pluck("go", "function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", -1, -1) -->
+<!-- pluck("go", "function", "GoPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/goplucker.go", -1, -1) -->
 ```go
-func (b *BlockyPlucker) Pluck(
+func (g *GoPlucker) Pluck(
 	ctx context.Context,
 	code string,
 	name string,
@@ -50,16 +50,23 @@ that! It does add a small comment, however, to indicate that there is hidden
 code. This can be very useful when you want to walk a user through a specific
 function or type, but don't want to include the entire body all at once.
 
-<!-- pluck("go", "function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", 0, 3) -->
+<!-- pluck("go", "function", "GoPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/goplucker.go", 0, 10) -->
 ```go
-func (b *BlockyPlucker) Pluck(
+func (g *GoPlucker) Pluck(
 	ctx context.Context,
 	code string,
 	name string,
 	kind Kind,
 ) (string, error) {
-	if !kind.Valid() {
-		return "", fmt.Errorf("%w: invalid kind '%s'", ErrBlockyPlucker, kind)
+	switch kind {
+	case File:
+		return code, nil
+	case Func, Type:
+		break
+	case Node:
+		return "", fmt.Errorf("%w: node kind not supported", ErrGoPlucker)
+	default:
+		return "", fmt.Errorf("%w: unrecognized kind: %v", ErrGoPlucker, kind)
 	}
 	// ...
 }
@@ -67,9 +74,9 @@ func (b *BlockyPlucker) Pluck(
 
 Instead, we can selectively include the relevant lines for any given step...
 
-<!-- pluck("go", "function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", 4, 12) -->
+<!-- pluck("go", "function", "GoPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/goplucker.go", 11, 19) -->
 ```go
-func (b *BlockyPlucker) Pluck(
+func (g *GoPlucker) Pluck(
 	ctx context.Context,
 	code string,
 	name string,
@@ -80,7 +87,7 @@ func (b *BlockyPlucker) Pluck(
 	var stderr bytes.Buffer
 	pick := fmt.Sprintf("%s=%s:%s", PickArg, kind, name)
 
-	cmd := exec.CommandContext(ctx, PluckCmd, pick)
+	cmd := exec.CommandContext(ctx, GoPluckCmd, pick)
 	cmd.Stdin = strings.NewReader(code)
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
@@ -90,9 +97,9 @@ func (b *BlockyPlucker) Pluck(
 
 ...as we work our way through the function...
 
-<!-- pluck("go", "function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", 13, 23) -->
+<!-- pluck("go", "function", "GoPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/goplucker.go", 20, 30) -->
 ```go
-func (b *BlockyPlucker) Pluck(
+func (g *GoPlucker) Pluck(
 	ctx context.Context,
 	code string,
 	name string,
@@ -103,8 +110,8 @@ func (b *BlockyPlucker) Pluck(
 	if err != nil {
 		return "", fmt.Errorf(
 			"%w: running %s: %s",
-			ErrBlockyPlucker,
-			PluckCmd,
+			ErrGoPlucker,
+			GoPluckCmd,
 			stderr.String(),
 		)
 	}
@@ -114,23 +121,30 @@ func (b *BlockyPlucker) Pluck(
 
 ...until we reach the end.
 
-<!-- pluck("go", "function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", 0, 0) -->
+<!-- pluck("go", "function", "GoPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/goplucker.go", 0, 0) -->
 ```go
-func (b *BlockyPlucker) Pluck(
+func (g *GoPlucker) Pluck(
 	ctx context.Context,
 	code string,
 	name string,
 	kind Kind,
 ) (string, error) {
-	if !kind.Valid() {
-		return "", fmt.Errorf("%w: invalid kind '%s'", ErrBlockyPlucker, kind)
+	switch kind {
+	case File:
+		return code, nil
+	case Func, Type:
+		break
+	case Node:
+		return "", fmt.Errorf("%w: node kind not supported", ErrGoPlucker)
+	default:
+		return "", fmt.Errorf("%w: unrecognized kind: %v", ErrGoPlucker, kind)
 	}
 
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	pick := fmt.Sprintf("%s=%s:%s", PickArg, kind, name)
 
-	cmd := exec.CommandContext(ctx, PluckCmd, pick)
+	cmd := exec.CommandContext(ctx, GoPluckCmd, pick)
 	cmd.Stdin = strings.NewReader(code)
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
@@ -139,8 +153,8 @@ func (b *BlockyPlucker) Pluck(
 	if err != nil {
 		return "", fmt.Errorf(
 			"%w: running %s: %s",
-			ErrBlockyPlucker,
-			PluckCmd,
+			ErrGoPlucker,
+			GoPluckCmd,
 			stderr.String(),
 		)
 	}
