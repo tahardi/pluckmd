@@ -52,7 +52,7 @@ func TestSnippet_Partial(t *testing.T) {
 		snippet, err := pluck.NewSnippet(goPluckerPluck, goPluckerPluckSnippet)
 		require.NoError(t, err)
 
-		start, end := 0, 8
+		start, end := 0, 10
 		want := `func (g *GoPlucker) Pluck(
 	ctx context.Context,
 	code string,
@@ -64,8 +64,10 @@ func TestSnippet_Partial(t *testing.T) {
 		return code, nil
 	case Func, Type:
 		break
+	case Node:
+		return "", fmt.Errorf("%w: node kind not supported", ErrGoPlucker)
 	default:
-		return "", fmt.Errorf("%w: unsupported kind: %v", ErrGoPlucker, kind)
+		return "", fmt.Errorf("%w: unrecognized kind: %v", ErrGoPlucker, kind)
 	}
 	// ...
 }
@@ -83,7 +85,7 @@ func TestSnippet_Partial(t *testing.T) {
 		snippet, err := pluck.NewSnippet(goPluckerPluck, goPluckerPluckSnippet)
 		require.NoError(t, err)
 
-		start, end := 9, 17
+		start, end := 11, 19
 		want := `func (g *GoPlucker) Pluck(
 	ctx context.Context,
 	code string,
@@ -115,7 +117,7 @@ func TestSnippet_Partial(t *testing.T) {
 		snippet, err := pluck.NewSnippet(goPluckerPluck, goPluckerPluckSnippet)
 		require.NoError(t, err)
 
-		start, end := 18, 28
+		start, end := 20, 30
 		want := `func (g *GoPlucker) Pluck(
 	ctx context.Context,
 	code string,

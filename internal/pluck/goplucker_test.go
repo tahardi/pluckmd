@@ -24,8 +24,10 @@ const (
 		return code, nil
 	case Func, Type:
 		break
+	case Node:
+		return "", fmt.Errorf("%w: node kind not supported", ErrGoPlucker)
 	default:
-		return "", fmt.Errorf("%w: unsupported kind: %v", ErrGoPlucker, kind)
+		return "", fmt.Errorf("%w: unrecognized kind: %v", ErrGoPlucker, kind)
 	}
 
 	var out bytes.Buffer
