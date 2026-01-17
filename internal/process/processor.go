@@ -27,7 +27,7 @@ var (
 type Processor struct {
 	cacher   cache.Cacher
 	fetchers []fetch.Fetcher
-	pluckers  map[pluck.Lang]pluck.Plucker
+	pluckers map[pluck.Lang]pluck.Plucker
 }
 
 func NewProcessor(
@@ -61,17 +61,12 @@ func (p *Processor) ProcessMarkdown(
 			return nil, fmt.Errorf("%w: creating directive: %w", ErrProcessor, err)
 		}
 
-		snipper, err := p.MakeCodeSnipper(ctx, directive)
-		if err != nil {
-			return nil, err
-		}
-
-		code, err := snipper.Snippet(directive.start, directive.end)
+		snippet, err := p.GetCodeSnippet(ctx, directive)
 		if err != nil {
 			return nil, fmt.Errorf("%w: getting snippet: %w", ErrProcessor, err)
 		}
 
-		err = WriteCodeBlock(&processed, directiveLine, code)
+		err = WriteCodeBlock(&processed, directiveLine, snippet)
 		if err != nil {
 			return nil, fmt.Errorf("%w: writing code block: %w", ErrProcessor, err)
 		}
@@ -90,18 +85,45 @@ func (p *Processor) ProcessMarkdown(
 	return processed.Bytes(), nil
 }
 
-func (p *Processor) MakeCodeSnipper(
+func (p *Processor) GetCodeSnippet(
 	ctx context.Context,
 	directive *Directive,
-) (snip.Snipper, error) {
+) (string, error) {
+	fullSnippet, err := p.GetFullCodeSnippet(ctx, directive)
+	if err != nil {
+		return "", err
+	}
+
+	var snipper snip.Snipper
+	switch directive.Lang() {
+	case pluck.Go:
+		snipper, err = snip.NewGoSnipper(directive.Name(), fullSnippet)
+		if err != nil {
+			return "", fmt.Errorf("%w: creating go snipper: %w", ErrProcessor, err)
+		}
+	case pluck.YAML:
+		snipper, err = snip.NewYAMLSnipper(directive.Name(), fullSnippet)
+		if err != nil {
+			return "", fmt.Errorf("%w: creating yaml snipper: %w", ErrProcessor, err)
+		}
+	default:
+		return "", fmt.Errorf("%w: unsupported lang: %s", ErrProcessor, directive.Lang())
+	}
+	return snipper.Snippet(directive.start, directive.end)
+}
+
+func (p *Processor) GetFullCodeSnippet(
+	ctx context.Context,
+	directive *Directive,
+) (string, error) {
 	snippetBytes, err := p.cacher.Retrieve(ctx, directive.CodeSnippetURI())
 	switch {
 	case err == nil:
-		return snip.NewGoSnipper(directive.Name(), string(snippetBytes))
+		return string(snippetBytes), nil
 	case errors.Is(err, cache.ErrURINotFound):
 		break
 	default:
-		return nil, fmt.Errorf(
+		return "", fmt.Errorf(
 			"%w: retrieving snippet bytes: %w",
 			ErrProcessor,
 			err,
@@ -110,12 +132,12 @@ func (p *Processor) MakeCodeSnipper(
 
 	sourceCode, err := p.GetSourceCode(ctx, directive)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	plucker, exists := p.pluckers[directive.Lang()]
 	if !exists {
-		return nil, fmt.Errorf("%w: no plucker for lang: %s", ErrProcessor, directive.Lang())
+		return "", fmt.Errorf("%w: no plucker for lang: %s", ErrProcessor, directive.Lang())
 	}
 
 	snippetString, err := plucker.Pluck(
@@ -125,18 +147,18 @@ func (p *Processor) MakeCodeSnipper(
 		directive.Kind(),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("%w: plucking snippet: %w", ErrProcessor, err)
+		return "", fmt.Errorf("%w: plucking snippet: %w", ErrProcessor, err)
 	}
 
 	err = p.cacher.Store(ctx, directive.CodeSnippetURI(), []byte(snippetString))
 	if err != nil {
-		return nil, fmt.Errorf(
+		return "", fmt.Errorf(
 			"%w: storing snippet bytes: %w",
 			ErrProcessor,
 			err,
 		)
 	}
-	return snip.NewGoSnipper(directive.Name(), snippetString)
+	return snippetString, nil
 }
 
 func (p *Processor) GetSourceCode(
