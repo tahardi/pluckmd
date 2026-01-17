@@ -8,11 +8,11 @@ import (
 	"github.com/tahardi/pluckmd/internal/pluck"
 )
 
-func TestSnippet_Full(t *testing.T) {
+func TestGoSnippet_Full(t *testing.T) {
 	t.Run("happy path", func(t *testing.T) {
 		// given
 		want := goPluckerPluckSnippet + "\n"
-		snippet, err := pluck.NewSnippet(goPluckerPluck, want)
+		snippet, err := pluck.NewGoSnippet(goPluckerPluck, want)
 		require.NoError(t, err)
 
 		// when
@@ -23,10 +23,10 @@ func TestSnippet_Full(t *testing.T) {
 	})
 }
 
-func TestSnippet_Partial(t *testing.T) {
+func TestGoSnippet_Partial(t *testing.T) {
 	t.Run("happy path - no body", func(t *testing.T) {
 		// given
-		snippet, err := pluck.NewSnippet(goPluckerPluck, goPluckerPluckSnippet)
+		snippet, err := pluck.NewGoSnippet(goPluckerPluck, goPluckerPluckSnippet)
 		require.NoError(t, err)
 
 		start, end := pluck.EmptyStart, pluck.EmptyEnd
@@ -49,7 +49,7 @@ func TestSnippet_Partial(t *testing.T) {
 
 	t.Run("happy path - start of body", func(t *testing.T) {
 		// given
-		snippet, err := pluck.NewSnippet(goPluckerPluck, goPluckerPluckSnippet)
+		snippet, err := pluck.NewGoSnippet(goPluckerPluck, goPluckerPluckSnippet)
 		require.NoError(t, err)
 
 		start, end := 0, 10
@@ -82,7 +82,7 @@ func TestSnippet_Partial(t *testing.T) {
 
 	t.Run("happy path - middle of body", func(t *testing.T) {
 		// given
-		snippet, err := pluck.NewSnippet(goPluckerPluck, goPluckerPluckSnippet)
+		snippet, err := pluck.NewGoSnippet(goPluckerPluck, goPluckerPluckSnippet)
 		require.NoError(t, err)
 
 		start, end := 11, 19
@@ -114,7 +114,7 @@ func TestSnippet_Partial(t *testing.T) {
 
 	t.Run("happy path - end of body", func(t *testing.T) {
 		// given
-		snippet, err := pluck.NewSnippet(goPluckerPluck, goPluckerPluckSnippet)
+		snippet, err := pluck.NewGoSnippet(goPluckerPluck, goPluckerPluckSnippet)
 		require.NoError(t, err)
 
 		start, end := 20, 30
@@ -147,7 +147,7 @@ func TestSnippet_Partial(t *testing.T) {
 
 	t.Run("happy path - full body", func(t *testing.T) {
 		// given
-		snippet, err := pluck.NewSnippet(goPluckerPluck, goPluckerPluckSnippet)
+		snippet, err := pluck.NewGoSnippet(goPluckerPluck, goPluckerPluckSnippet)
 		require.NoError(t, err)
 
 		start, end := pluck.FullStart, pluck.FullEnd

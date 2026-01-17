@@ -92,11 +92,11 @@ func (p *Processor) ProcessMarkdown(
 func (p *Processor) GetCodeSnippet(
 	ctx context.Context,
 	directive *Directive,
-) (*pluck.Snippet, error) {
+) (*pluck.GoSnippet, error) {
 	snippetBytes, err := p.cacher.Retrieve(ctx, directive.CodeSnippetURI())
 	switch {
 	case err == nil:
-		return pluck.NewSnippet(directive.Name(), string(snippetBytes))
+		return pluck.NewGoSnippet(directive.Name(), string(snippetBytes))
 	case errors.Is(err, cache.ErrURINotFound):
 		break
 	default:
@@ -130,7 +130,7 @@ func (p *Processor) GetCodeSnippet(
 			err,
 		)
 	}
-	return pluck.NewSnippet(directive.Name(), snippetString)
+	return pluck.NewGoSnippet(directive.Name(), snippetString)
 }
 
 func (p *Processor) GetSourceCode(
