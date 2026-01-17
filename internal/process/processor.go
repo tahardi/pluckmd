@@ -11,6 +11,7 @@ import (
 	"github.com/tahardi/pluckmd/internal/cache"
 	"github.com/tahardi/pluckmd/internal/fetch"
 	"github.com/tahardi/pluckmd/internal/pluck"
+	"github.com/tahardi/pluckmd/internal/snip"
 )
 
 const (
@@ -92,11 +93,11 @@ func (p *Processor) ProcessMarkdown(
 func (p *Processor) GetCodeSnippet(
 	ctx context.Context,
 	directive *Directive,
-) (*pluck.GoSnippet, error) {
+) (*snip.GoSnipper, error) {
 	snippetBytes, err := p.cacher.Retrieve(ctx, directive.CodeSnippetURI())
 	switch {
 	case err == nil:
-		return pluck.NewGoSnippet(directive.Name(), string(snippetBytes))
+		return snip.NewGoSnipper(directive.Name(), string(snippetBytes))
 	case errors.Is(err, cache.ErrURINotFound):
 		break
 	default:
@@ -130,7 +131,7 @@ func (p *Processor) GetCodeSnippet(
 			err,
 		)
 	}
-	return pluck.NewGoSnippet(directive.Name(), snippetString)
+	return snip.NewGoSnipper(directive.Name(), snippetString)
 }
 
 func (p *Processor) GetSourceCode(

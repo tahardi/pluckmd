@@ -1,4 +1,4 @@
-package pluck
+package snip
 
 import (
 	"errors"
@@ -20,11 +20,11 @@ const (
 )
 
 var (
-	ErrGoSnippet            = errors.New("go snippet")
+	ErrGoSnipper            = errors.New("go snipper")
 	ErrOpeningBraceNotFound = errors.New("finding opening brace")
 )
 
-type GoSnippet struct {
+type GoSnipper struct {
 	name       string
 	definition string
 	body       string
@@ -32,20 +32,20 @@ type GoSnippet struct {
 	length     int
 }
 
-func NewGoSnippet(name string, snippet string) (*GoSnippet, error) {
+func NewGoSnipper(name string, snippet string) (*GoSnipper, error) {
 	definition, body, err := ParseGoSnippet(snippet)
 	if err != nil {
-		return nil, fmt.Errorf("%w: parsing snippet: %w", ErrGoSnippet, err)
+		return nil, fmt.Errorf("%w: parsing snippet: %w", ErrGoSnipper, err)
 	}
-	return NewGoSnippetWithDefinitionAndBody(name, definition, body)
+	return NewGoSnipperWithDefinitionAndBody(name, definition, body)
 }
 
-func NewGoSnippetWithDefinitionAndBody(
+func NewGoSnipperWithDefinitionAndBody(
 	name string,
 	definition string,
 	body string,
-) (*GoSnippet, error) {
-	return &GoSnippet{
+) (*GoSnipper, error) {
+	return &GoSnipper{
 		name:       name,
 		definition: definition,
 		body:       body,
@@ -54,27 +54,27 @@ func NewGoSnippetWithDefinitionAndBody(
 	}, nil
 }
 
-func (g *GoSnippet) Name() string {
+func (g *GoSnipper) Name() string {
 	return g.name
 }
 
-func (g *GoSnippet) Definition() string {
+func (g *GoSnipper) Definition() string {
 	return g.definition
 }
 
-func (g *GoSnippet) Body() string {
+func (g *GoSnipper) Body() string {
 	return g.body
 }
 
-func (g *GoSnippet) Full() string {
+func (g *GoSnipper) Full() string {
 	return g.definition + OpeningBrace + g.body + ClosingBrace
 }
 
-func (g *GoSnippet) Empty() string {
+func (g *GoSnipper) Empty() string {
 	return g.definition + OpeningBrace + EllipsesLine + ClosingBrace
 }
 
-func (g *GoSnippet) Partial(start int, end int) (string, error) {
+func (g *GoSnipper) Partial(start int, end int) (string, error) {
 	// Lazy initialization of bodyLines. Sometimes we end up with empty lines
 	// at the beginning and ending of the body. If so, remove them.
 	if g.bodyLines == nil {
@@ -99,7 +99,7 @@ func (g *GoSnippet) Partial(start int, end int) (string, error) {
 	case start < 0 || end < 0 || start > end || end > g.length:
 		return "", fmt.Errorf(
 			"%w: invalid range [start: %d, end: %d)",
-			ErrGoSnippet,
+			ErrGoSnipper,
 			start,
 			end,
 		)
