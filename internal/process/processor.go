@@ -27,15 +27,15 @@ var (
 type Processor struct {
 	cacher   cache.Cacher
 	fetchers []fetch.Fetcher
-	plucker  pluck.Plucker
+	pluckers  map[pluck.Lang]pluck.Plucker
 }
 
 func NewProcessor(
 	cacher cache.Cacher,
 	fetchers []fetch.Fetcher,
-	plucker pluck.Plucker,
+	pluckers map[pluck.Lang]pluck.Plucker,
 ) *Processor {
-	return &Processor{cacher: cacher, fetchers: fetchers, plucker: plucker}
+	return &Processor{cacher: cacher, fetchers: fetchers, pluckers: pluckers}
 }
 
 func (p *Processor) ProcessMarkdown(
@@ -113,7 +113,12 @@ func (p *Processor) MakeCodeSnipper(
 		return nil, err
 	}
 
-	snippetString, err := p.plucker.Pluck(
+	plucker, exists := p.pluckers[directive.Lang()]
+	if !exists {
+		return nil, fmt.Errorf("%w: no plucker for lang: %s", ErrProcessor, directive.Lang())
+	}
+
+	snippetString, err := plucker.Pluck(
 		ctx,
 		string(sourceCode),
 		directive.Name(),
