@@ -255,8 +255,9 @@ proxy:
   rev_addr_tls: "https://0.0.0.0:8443"
 ```
 
-To print a specific component of the file, use the `node` kind and the path to
-the component within the file:
+Note that the `type` and `func` kinds only apply to programming languages such
+as Go. To print a component of a configuration language such as YAML, use the
+`node` kind and the path to the component within the file:
 
 ```
 pluck("yaml", "node", "enclave", "internal/pluck/testdata/enclave-sev.yaml", -1, -1)
