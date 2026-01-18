@@ -4,7 +4,8 @@ Pluck for Markdown (PluckMD) is a CLI tool built on the Blocky
 [Pluck](https://github.com/blocky/pluck) tool, which allows you to "pluck"
 Golang type and function definitions from source code files. PluckMD uses this
 functionality to programmatically replace code blocks in Markdown files to
-help ensure your code documentation stays up-to-date.
+help ensure your code documentation stays up-to-date. Along with Go, PluckMD
+also supports plucking YAML code as well.
 
 ## How It Works
 
@@ -179,13 +180,16 @@ immediately precedes it.
 - pluck directives are contained within a single-line Markdown comment (i.e., `<!-- directive -->`)
 - pluck directives are on the line directly preceding the code block
 - if code blocks are indented, the pluck directive has the same indentation
-- the code block contains Golang code
+- the code block is marked as Golang or YAML code
+- the YAML snipper does not currently support returning partial YAML components
+- the YAML plucker may not support all YAML features
 
 ### Info
 
 - \[start, end) indicates the range of lines within the code block to include in the output
 - `-1, -1` indicates that the entire code block should be excluded from the output
 - `0, 0` indicates that the entire code block should be included in the output
+- `"file"` can be used to print the entire contents of a file
 
 #### Local File Fetcher
 
@@ -224,3 +228,57 @@ branch that introduces a new function. Using remote URLs, you would have to
 first commit and push the function to the remote respository before running
 `pluckmd`to update your documentation. Otherwise, it would fail to find the
 function, or it might pull an out-of-date version.
+
+#### YAML Usage
+
+The YAML plucker can be used to extract specific YAML components from a file.
+Note that the YAML plucker does not currently support returning partial YAML
+components. Thus, the `start` and `end` parameters of the pluck directive are
+ignored. Let's use our `enclave-sev.yaml` file to demonstrate how to pluck YAML. 
+Use the following directive to print the entire contents of the file:
+
+```
+pluck("yaml", "file", "enclave-sev.yaml", "internal/pluck/testdata/enclave-sev.yaml", -1, -1)
+```
+
+<!-- pluck("yaml", "file", "enclave-sev.yaml", "internal/pluck/testdata/enclave-sev.yaml", -1, -1) -->
+```yaml
+platform: "sev"
+enclave:
+  addr: "http://127.0.0.1:8083"
+  addr_tls: "https://127.0.0.1:8444"
+  args:
+    domain: "bearclave.tee"
+proxy:
+  addr_tls: "http://127.0.0.1:8084"
+  rev_addr: "http://0.0.0.0:8080"
+  rev_addr_tls: "https://0.0.0.0:8443"
+```
+
+To print a specific component of the file, use the `node` kind and the path to
+the component within the file:
+
+```
+pluck("yaml", "node", "enclave", "internal/pluck/testdata/enclave-sev.yaml", -1, -1)
+```
+
+<!-- pluck("yaml", "node", "enclave", "internal/pluck/testdata/enclave-sev.yaml", -1, -1) -->
+```yaml
+enclave:
+  addr: "http://127.0.0.1:8083"
+  addr_tls: "https://127.0.0.1:8444"
+  args:
+    domain: "bearclave.tee"
+```
+
+You must provide the full path to the component within the file:
+
+```
+pluck("yaml", "node", "enclave.args", "internal/pluck/testdata/enclave-sev.yaml", -1, -1)
+```
+
+<!-- pluck("yaml", "node", "enclave.args", "internal/pluck/testdata/enclave-sev.yaml", -1, -1) -->
+```yaml
+args:
+  domain: "bearclave.tee"
+```

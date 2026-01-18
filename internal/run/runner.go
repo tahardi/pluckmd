@@ -47,8 +47,13 @@ func NewRunner() (*Runner, error) {
 	if err != nil {
 		return nil, err
 	}
+	yamlPlucker, err := pluck.NewYAMLPlucker()
+	if err != nil {
+		return nil, err
+	}
 	pluckers := map[pluck.Lang]pluck.Plucker{
 		pluck.Go: goPlucker,
+		pluck.YAML: yamlPlucker,
 	}
 
 	return NewRunnerWithProcessor(process.NewProcessor(cacher, fetchers, pluckers))
