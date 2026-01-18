@@ -4,7 +4,8 @@ Pluck for Markdown (PluckMD) is a CLI tool built on the Blocky
 [Pluck](https://github.com/blocky/pluck) tool, which allows you to "pluck"
 Golang type and function definitions from source code files. PluckMD uses this
 functionality to programmatically replace code blocks in Markdown files to
-help ensure your code documentation stays up-to-date.
+help ensure your code documentation stays up-to-date. Along with Go, PluckMD
+also supports plucking YAML code as well.
 
 ## How It Works
 
@@ -24,17 +25,17 @@ type or function body to include in the output
 
 
 Let's demonstrate this with an example. There is a file in our repository called
-`blocky.go` that contains a `BlockyPlucker` type with a `Pluck` function. We
+`goplucker.go` that contains a `GoPlucker` type with a `Pluck` function. We
 are going to use PluckMD to extract the `Pluck` function and include it in our
 documentation.
 
 ```
-pluck("function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", -1, -1)
+pluck("function", "GoPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/goplucker.go", -1, -1)
 ```
 
-<!-- pluck("go", "function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", -1, -1) -->
+<!-- pluck("go", "function", "GoPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/goplucker.go", -1, -1) -->
 ```go
-func (b *BlockyPlucker) Pluck(
+func (g *GoPlucker) Pluck(
 	ctx context.Context,
 	code string,
 	name string,
@@ -50,16 +51,23 @@ that! It does add a small comment, however, to indicate that there is hidden
 code. This can be very useful when you want to walk a user through a specific
 function or type, but don't want to include the entire body all at once.
 
-<!-- pluck("go", "function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", 0, 3) -->
+<!-- pluck("go", "function", "GoPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/goplucker.go", 0, 10) -->
 ```go
-func (b *BlockyPlucker) Pluck(
+func (g *GoPlucker) Pluck(
 	ctx context.Context,
 	code string,
 	name string,
 	kind Kind,
 ) (string, error) {
-	if !kind.Valid() {
-		return "", fmt.Errorf("%w: invalid kind '%s'", ErrBlockyPlucker, kind)
+	switch kind {
+	case File:
+		return code, nil
+	case Func, Type:
+		break
+	case Node:
+		return "", fmt.Errorf("%w: node kind not supported", ErrGoPlucker)
+	default:
+		return "", fmt.Errorf("%w: unrecognized kind: %v", ErrGoPlucker, kind)
 	}
 	// ...
 }
@@ -67,9 +75,9 @@ func (b *BlockyPlucker) Pluck(
 
 Instead, we can selectively include the relevant lines for any given step...
 
-<!-- pluck("go", "function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", 4, 12) -->
+<!-- pluck("go", "function", "GoPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/goplucker.go", 11, 19) -->
 ```go
-func (b *BlockyPlucker) Pluck(
+func (g *GoPlucker) Pluck(
 	ctx context.Context,
 	code string,
 	name string,
@@ -80,7 +88,7 @@ func (b *BlockyPlucker) Pluck(
 	var stderr bytes.Buffer
 	pick := fmt.Sprintf("%s=%s:%s", PickArg, kind, name)
 
-	cmd := exec.CommandContext(ctx, PluckCmd, pick)
+	cmd := exec.CommandContext(ctx, GoPluckCmd, pick)
 	cmd.Stdin = strings.NewReader(code)
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
@@ -90,9 +98,9 @@ func (b *BlockyPlucker) Pluck(
 
 ...as we work our way through the function...
 
-<!-- pluck("go", "function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", 13, 23) -->
+<!-- pluck("go", "function", "GoPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/goplucker.go", 20, 30) -->
 ```go
-func (b *BlockyPlucker) Pluck(
+func (g *GoPlucker) Pluck(
 	ctx context.Context,
 	code string,
 	name string,
@@ -103,8 +111,8 @@ func (b *BlockyPlucker) Pluck(
 	if err != nil {
 		return "", fmt.Errorf(
 			"%w: running %s: %s",
-			ErrBlockyPlucker,
-			PluckCmd,
+			ErrGoPlucker,
+			GoPluckCmd,
 			stderr.String(),
 		)
 	}
@@ -114,23 +122,30 @@ func (b *BlockyPlucker) Pluck(
 
 ...until we reach the end.
 
-<!-- pluck("go", "function", "BlockyPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/blocky.go", 0, 0) -->
+<!-- pluck("go", "function", "GoPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/goplucker.go", 0, 0) -->
 ```go
-func (b *BlockyPlucker) Pluck(
+func (g *GoPlucker) Pluck(
 	ctx context.Context,
 	code string,
 	name string,
 	kind Kind,
 ) (string, error) {
-	if !kind.Valid() {
-		return "", fmt.Errorf("%w: invalid kind '%s'", ErrBlockyPlucker, kind)
+	switch kind {
+	case File:
+		return code, nil
+	case Func, Type:
+		break
+	case Node:
+		return "", fmt.Errorf("%w: node kind not supported", ErrGoPlucker)
+	default:
+		return "", fmt.Errorf("%w: unrecognized kind: %v", ErrGoPlucker, kind)
 	}
 
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	pick := fmt.Sprintf("%s=%s:%s", PickArg, kind, name)
 
-	cmd := exec.CommandContext(ctx, PluckCmd, pick)
+	cmd := exec.CommandContext(ctx, GoPluckCmd, pick)
 	cmd.Stdin = strings.NewReader(code)
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
@@ -139,8 +154,8 @@ func (b *BlockyPlucker) Pluck(
 	if err != nil {
 		return "", fmt.Errorf(
 			"%w: running %s: %s",
-			ErrBlockyPlucker,
-			PluckCmd,
+			ErrGoPlucker,
+			GoPluckCmd,
 			stderr.String(),
 		)
 	}
@@ -165,13 +180,16 @@ immediately precedes it.
 - pluck directives are contained within a single-line Markdown comment (i.e., `<!-- directive -->`)
 - pluck directives are on the line directly preceding the code block
 - if code blocks are indented, the pluck directive has the same indentation
-- the code block contains Golang code
+- the code block is marked as Golang or YAML code
+- the YAML snipper does not currently support returning partial YAML components
+- the YAML plucker may not support all YAML features
 
 ### Info
 
 - \[start, end) indicates the range of lines within the code block to include in the output
 - `-1, -1` indicates that the entire code block should be excluded from the output
 - `0, 0` indicates that the entire code block should be included in the output
+- `"file"` can be used to print the entire contents of a file
 
 #### Local File Fetcher
 
@@ -210,3 +228,58 @@ branch that introduces a new function. Using remote URLs, you would have to
 first commit and push the function to the remote respository before running
 `pluckmd`to update your documentation. Otherwise, it would fail to find the
 function, or it might pull an out-of-date version.
+
+#### YAML Usage
+
+The YAML plucker can be used to extract specific YAML components from a file.
+Note that the YAML plucker does not currently support returning partial YAML
+components. Thus, the `start` and `end` parameters of the pluck directive are
+ignored. Let's use our `enclave-sev.yaml` file to demonstrate how to pluck YAML. 
+Use the following directive to print the entire contents of the file:
+
+```
+pluck("yaml", "file", "enclave-sev.yaml", "internal/pluck/testdata/enclave-sev.yaml", -1, -1)
+```
+
+<!-- pluck("yaml", "file", "enclave-sev.yaml", "internal/pluck/testdata/enclave-sev.yaml", -1, -1) -->
+```yaml
+platform: "sev"
+enclave:
+  addr: "http://127.0.0.1:8083"
+  addr_tls: "https://127.0.0.1:8444"
+  args:
+    domain: "bearclave.tee"
+proxy:
+  addr_tls: "http://127.0.0.1:8084"
+  rev_addr: "http://0.0.0.0:8080"
+  rev_addr_tls: "https://0.0.0.0:8443"
+```
+
+Note that the `type` and `func` kinds only apply to programming languages such
+as Go. To print a component of a configuration language such as YAML, use the
+`node` kind and the path to the component within the file:
+
+```
+pluck("yaml", "node", "enclave", "internal/pluck/testdata/enclave-sev.yaml", -1, -1)
+```
+
+<!-- pluck("yaml", "node", "enclave", "internal/pluck/testdata/enclave-sev.yaml", -1, -1) -->
+```yaml
+enclave:
+  addr: "http://127.0.0.1:8083"
+  addr_tls: "https://127.0.0.1:8444"
+  args:
+    domain: "bearclave.tee"
+```
+
+You must provide the full path to the component within the file:
+
+```
+pluck("yaml", "node", "enclave.args", "internal/pluck/testdata/enclave-sev.yaml", -1, -1)
+```
+
+<!-- pluck("yaml", "node", "enclave.args", "internal/pluck/testdata/enclave-sev.yaml", -1, -1) -->
+```yaml
+args:
+  domain: "bearclave.tee"
+```

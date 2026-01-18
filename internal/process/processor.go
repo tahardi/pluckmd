@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	CodeBlockStartLine = "```go\n"
+	GoCodeBlockStartLine   = "```go\n"
+	YAMLCodeBlockStartLine = "```yaml\n"
 	CodeBlockStopLine  = "```\n"
 )
 
@@ -66,12 +67,19 @@ func (p *Processor) ProcessMarkdown(
 			return nil, fmt.Errorf("%w: getting snippet: %w", ErrProcessor, err)
 		}
 
-		err = WriteCodeBlock(&processed, directiveLine, snippet)
+		codeBlockStartLine := ""
+		switch directive.Lang() {
+		case pluck.Go:
+			codeBlockStartLine = GoCodeBlockStartLine
+		case pluck.YAML:
+			codeBlockStartLine = YAMLCodeBlockStartLine
+		}
+		err = WriteCodeBlock(&processed, directiveLine, codeBlockStartLine, snippet)
 		if err != nil {
 			return nil, fmt.Errorf("%w: writing code block: %w", ErrProcessor, err)
 		}
 
-		end, err := FindCodeBlockEnd(lines, i)
+		end, err := FindCodeBlockEnd(codeBlockStartLine, lines, i)
 		if err != nil {
 			return nil, fmt.Errorf(
 				"%w: %w: snippet uri: %s",
@@ -218,6 +226,7 @@ func (p *Processor) Fetch(ctx context.Context, directive *Directive) ([]byte, er
 func WriteCodeBlock(
 	processed *bytes.Buffer,
 	directiveLine string,
+	codeBlockStartLine string,
 	code string,
 ) error {
 	// Calculate indentation by trimming whitespace from the left side of the
@@ -233,14 +242,14 @@ func WriteCodeBlock(
 	}
 
 	if indent == "" {
-		processed.WriteString(CodeBlockStartLine)
+		processed.WriteString(codeBlockStartLine)
 		processed.WriteString(code)
 		processed.WriteString(CodeBlockStopLine)
 		return nil
 	}
 
 	indentedCode := IndentCode(code, indent)
-	processed.WriteString(indent + CodeBlockStartLine)
+	processed.WriteString(indent + codeBlockStartLine)
 	processed.WriteString(indentedCode)
 	processed.WriteString(indent + CodeBlockStopLine)
 	return nil
@@ -260,12 +269,12 @@ func IndentCode(code string, indentation string) string {
 	return strings.Join(lines, "\n") + "\n"
 }
 
-func FindCodeBlockEnd(lines []string, i int) (int, error) {
+func FindCodeBlockEnd(codeBlockStartLine string, lines []string, i int) (int, error) {
 	foundStart := false
 	for ; i < len(lines); i++ {
 		trimmed := strings.TrimLeftFunc(lines[i], unicode.IsSpace) + "\n"
 		if !foundStart {
-			if strings.HasPrefix(trimmed, CodeBlockStartLine) {
+			if strings.HasPrefix(trimmed, codeBlockStartLine) {
 				foundStart = true
 			}
 		} else {
