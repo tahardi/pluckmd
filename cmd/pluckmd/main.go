@@ -29,11 +29,12 @@ var mainCmd = &cobra.Command{
 			time.Duration(timeout)*time.Second,
 		)
 		defer cancel()
-		return runner.Run(ctx, dir)
+		return runner.Run(ctx, dir, ignoreDirs)
 	},
 }
 
 var dir string
+var ignoreDirs []string
 var timeout int
 
 func init() {
@@ -43,6 +44,13 @@ func init() {
 		"d",
 		defaultDocDir,
 		"directory containing markdown files to process (recursive)",
+	)
+	mainCmd.PersistentFlags().StringSliceVarP(
+		&ignoreDirs,
+		"ignore-dir",
+		"i",
+		[]string{},
+		"directory to ignore (e.g., testdata/, .github/",
 	)
 	mainCmd.PersistentFlags().IntVarP(
 		&timeout,
