@@ -49,4 +49,6 @@ test-unit-internal:
 
 .PHONY: pluckmd
 pluckmd:
-	@go run ./cmd/pluckmd --dir .
+	@go run ./cmd/pluckmd --dir . \
+		--ignore-dir internal/ \
+		--ignore-dir .github/

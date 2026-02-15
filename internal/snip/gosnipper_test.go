@@ -49,22 +49,23 @@ const (
 }`
 )
 
-func TestGoSnippet_Full(t *testing.T) {
-	t.Run("happy path", func(t *testing.T) {
+func TestGoSnipper_Snippet(t *testing.T) {
+	t.Run("happy path - full body", func(t *testing.T) {
 		// given
-		want := goPluckerPluckSnippet + "\n"
-		snippet, err := snip.NewGoSnipper(goPluckerPluck, want)
+		snippet, err := snip.NewGoSnipper(goPluckerPluck, goPluckerPluckSnippet)
 		require.NoError(t, err)
 
+		start, end := snip.FullStart, snip.FullEnd
+		want := goPluckerPluckSnippet + "\n"
+
 		// when
-		got := snippet.Full()
+		got, err := snippet.Snippet(start, end)
 
 		// then
-		require.Equal(t, want, got)
+		require.NoError(t, err)
+		assert.Equal(t, want, got)
 	})
-}
 
-func TestGoSnippet_Partial(t *testing.T) {
 	t.Run("happy path - no body", func(t *testing.T) {
 		// given
 		snippet, err := snip.NewGoSnipper(goPluckerPluck, goPluckerPluckSnippet)
@@ -178,22 +179,6 @@ func TestGoSnippet_Partial(t *testing.T) {
 	return out.String(), nil
 }
 `
-		// when
-		got, err := snippet.Snippet(start, end)
-
-		// then
-		require.NoError(t, err)
-		assert.Equal(t, want, got)
-	})
-
-	t.Run("happy path - full body", func(t *testing.T) {
-		// given
-		snippet, err := snip.NewGoSnipper(goPluckerPluck, goPluckerPluckSnippet)
-		require.NoError(t, err)
-
-		start, end := snip.FullStart, snip.FullEnd
-		want := goPluckerPluckSnippet + "\n"
-
 		// when
 		got, err := snippet.Snippet(start, end)
 

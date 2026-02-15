@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/tahardi/pluckmd/internal/cache"
 	"github.com/tahardi/pluckmd/internal/fetch"
@@ -52,7 +53,7 @@ func NewRunner() (*Runner, error) {
 		return nil, err
 	}
 	pluckers := map[pluck.Lang]pluck.Plucker{
-		pluck.Go: goPlucker,
+		pluck.Go:   goPlucker,
 		pluck.YAML: yamlPlucker,
 	}
 
@@ -63,8 +64,12 @@ func NewRunnerWithProcessor(processor *process.Processor) (*Runner, error) {
 	return &Runner{processor: processor}, nil
 }
 
-func (r *Runner) Run(ctx context.Context, dir string) error {
-	files, err := ListMarkdownFiles(dir)
+func (r *Runner) Run(
+	ctx context.Context,
+	dir string,
+	ignoreDirs []string,
+) error {
+	files, err := ListMarkdownFiles(dir, ignoreDirs)
 	if err != nil {
 		return fmt.Errorf("%w: listing markdown files: %w", ErrRunner, err)
 	}
@@ -89,14 +94,31 @@ func (r *Runner) Run(ctx context.Context, dir string) error {
 	return nil
 }
 
-func ListMarkdownFiles(dir string) ([]string, error) {
+func ListMarkdownFiles(
+	dir string,
+	ignoreDirs []string,
+) ([]string, error) {
+	ignoreDirMap := make(map[string]bool)
+	for _, ignoreDir := range ignoreDirs {
+		ignoreDir = strings.TrimPrefix(ignoreDir, "./")
+		ignoreDir = strings.TrimSuffix(ignoreDir, "/")
+		ignoreDirMap[ignoreDir] = true
+	}
+
 	files := []string{}
 	err := filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 
-		if !d.IsDir() && filepath.Ext(path) == MarkdownExt {
+		if d.IsDir() {
+			if ignoreDirMap[d.Name()] {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
+		if filepath.Ext(path) == MarkdownExt {
 			files = append(files, path)
 		}
 		return nil
