@@ -10,16 +10,16 @@ import (
 	"github.com/tahardi/pluckmd/internal/fetch"
 )
 
-const gitHubFetcherURI = "https://github.com/tahardi/pluckmd/blob/main/internal/fetch/github.go"
+const gitHubFetcherURI = "https://github.com/tahardi/pluckmd/blob/main/internal/fetch/fetcher.go"
 
-//go:embed github.go
-var githubGo []byte
+//go:embed fetcher.go
+var fetcherGo []byte
 
 func TestGitHubFetcher_Fetch(t *testing.T) {
 	t.Run("happy path - fetcher/github.go", func(t *testing.T) {
 		// given
 		ctx := context.Background()
-		want := githubGo
+		want := fetcherGo
 		uri := gitHubFetcherURI
 		fetcher, err := fetch.NewGitHubFetcher()
 		require.NoError(t, err)

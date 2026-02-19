@@ -48,6 +48,9 @@ func (g *GitHubFetcher) Fetch(
 		return nil, fmt.Errorf("%w: creating request: %w", ErrGitHubFetcher, err)
 	}
 
+	// G704 - potential for Server-Side Request Forgery (SSRF). URL is validated
+	// by URItoRawGitHubURL. So, we choose to suppress the lint error here.
+	//nolint:gosec
 	resp, err := g.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("%w: fetching: %w", ErrGitHubFetcher, err)
