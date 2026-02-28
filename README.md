@@ -9,29 +9,38 @@ also supports plucking YAML code as well.
 
 ## How It Works
 
-PluckMD scans Markdown files looking for comments containing "pluck directives",
-where a directive is defined as:
+The `pluckmd` tool recursively searches a given directory for Markdown files.
+For each file, it scans the contents looking for Markdown comments that contain
+a PluckMD "directive". The format of a directive is defined as:
 
 ```
 pluck("lang", "kind", "name", "source", start, end)
 ```
 
-- `lang` can be "go" or "yaml"
-- `kind` can be "file", "func", "node", or "type"
-- `name` is the name of the type or function to pluck
-- `source` is the GitHub URL of the source file containing the type or function
+- `lang` the language of the source code to pluck (e.g., "go", "yaml")
+- `kind` the kind of code block to pluck (e.g., "func", "node", "type")
+- `name` the name of the code block to pluck
+- `source` the file path or GitHub URL for the file containing the code to pluck
 - `start` and `end` are line numbers indicating the range of lines within the
-type or function body to include in the output
-
+code block to include in the output
 
 Let's demonstrate this with an example. There is a file in our repository called
-`goplucker.go` that contains a `GoPlucker` type with a `Pluck` function. We
-are going to use PluckMD to extract the `Pluck` function and include it in our
-documentation.
+`internal/pluck/goplucker.go` that contains a `GoPlucker` struct with a `Pluck` 
+method. To extract the `Pluck` function and include it here in our README, we
+will define a Markdown comment containing the following directive:
 
 ```
-pluck("function", "GoPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/goplucker.go", -1, -1)
+pluck("go", "function", "GoPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/goplucker.go", -1, -1)
 ```
+
+This directive tells PluckMD to pluck a Go function called `GoPlucker.Pluck`
+from a file located at the given URL and to not include the function body (the 
+pair `-1,-1` is used to indicate that we want to "hide" the body).
+
+If you view the "raw" version of our README.md, you will see a comment immediately
+following this text that contains our directive. Initially, the code block
+below was empty, but after running `pluckmd --dir .` it was populated using the
+information contained in the directive.
 
 <!-- pluck("go", "function", "GoPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/goplucker.go", -1, -1) -->
 ```go
@@ -45,11 +54,16 @@ func (g *GoPlucker) Pluck(
 }
 ```
 
-The pair `(-1, -1)` is a special case, in that it tells `pluckmd` to exclude
-the entire type or function body contents. As we can see above, it does just
-that! It does add a small comment, however, to indicate that there is hidden
-code. This can be very useful when you want to walk a user through a specific
-function or type, but don't want to include the entire body all at once.
+To see this in action, delete the contents of the code block but leave
+the opening ticks, language identifier, and closing ticks. Then run
+`pluckmd --dir .` and the code block will once again be populated with the
+`GoPlucker.Pluck` function.
+
+As we mentioned earlier, the pair `(-1, -1)` is a special case that it tells
+PluckMD to exclude the entire struct or function body contents. It does add a
+small comment, however, to indicate that there is hidden code. This feature is
+useful when you want to walk a user through a function in logical chunks. For
+example, let's look at the first "chunk" of the `GoPlucker.Pluck` function:
 
 <!-- pluck("go", "function", "GoPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/goplucker.go", 0, 10) -->
 ```go
@@ -73,7 +87,8 @@ func (g *GoPlucker) Pluck(
 }
 ```
 
-Instead, we can selectively include the relevant lines for any given step...
+Here we might describe what the first chunk of the function is doing, before
+moving on to the next bit...
 
 <!-- pluck("go", "function", "GoPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/goplucker.go", 11, 19) -->
 ```go
@@ -96,7 +111,7 @@ func (g *GoPlucker) Pluck(
 }
 ```
 
-...as we work our way through the function...
+...and the next one...
 
 <!-- pluck("go", "function", "GoPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/goplucker.go", 20, 30) -->
 ```go
@@ -120,7 +135,8 @@ func (g *GoPlucker) Pluck(
 }
 ```
 
-...until we reach the end.
+...until we reach the end. Finally, we might use the pair `(0, 0)` to tell
+PluckMD to display the entire function body:
 
 <!-- pluck("go", "function", "GoPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/goplucker.go", 0, 0) -->
 ```go
@@ -171,11 +187,17 @@ func (g *GoPlucker) Pluck(
 go install github.com/blocky/pluck/cmd/pluck@v0.1.1
 ```
 
-2. That's it! Add some pluck directives to your Markdown files and try it out!
-Simply define an empty code block with a pluck directive on the line that
-immediately precedes it.
+2. Install the Bearclave PluckMD CLI tool.
 
-### Assumptions & Limitations
+```bash
+go install github.com/tahardi/pluckmd/cmd/pluckmd@v0.1.1
+```
+
+3. That's it! Add some pluck directives to your Markdown files and try it out!
+Simply define an empty code block with a pluck directive on the line that
+immediately precedes it and then run PluckMD.
+
+## Assumptions & Limitations
 
 - pluck directives are contained within a single-line Markdown comment (i.e., `<!-- directive -->`)
 - pluck directives are on the line directly preceding the code block
@@ -184,14 +206,14 @@ immediately precedes it.
 - the YAML snipper does not currently support returning partial YAML components
 - the YAML plucker may not support all YAML features
 
-### Info
+## Usage
 
 - \[start, end) indicates the range of lines within the code block to include in the output
 - `-1, -1` indicates that the entire code block should be excluded from the output
 - `0, 0` indicates that the entire code block should be included in the output
 - `"file"` can be used to print the entire contents of a file
 
-#### Local File Fetcher
+### Local File Fetcher
 
 There are two ways that `pluckmd` tries to fetch source code files. The first is
 with `GitHubFetcher`, which downloads and reads a source code file for a given
@@ -229,7 +251,7 @@ first commit and push the function to the remote respository before running
 `pluckmd`to update your documentation. Otherwise, it would fail to find the
 function, or it might pull an out-of-date version.
 
-#### YAML Usage
+### YAML Usage
 
 The YAML plucker can be used to extract specific YAML components from a file.
 Note that the YAML plucker does not currently support returning partial YAML
