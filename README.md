@@ -19,31 +19,24 @@ also supports plucking YAML code as well.
 
 PluckMD recursively searches a given directory for Markdown files.
 For each file, it scans the contents looking for Markdown comments that contain
-a PluckMD "directive". The format of a directive is defined as:
+a PluckMD "directive", where a directive looks something like:
 
 ```
 pluck("lang", "kind", "name", "source", start, end)
 ```
 
-- `lang` the language of the source code to pluck (e.g., "go", "yaml")
-- `kind` the kind of code block to pluck (e.g., "func", "node", "type")
-- `name` the name of the code block to pluck
-- `source` the file path or GitHub URL for the file containing the code to pluck
-- `start` the starting line of the struct or function body to display (inclusive)
-- `end` the ending line of the struct or function body to display (exclusive)
-
-Let's demonstrate this with an example. There is a file in our repository called
-`internal/pluck/goplucker.go` that contains a `GoPlucker` struct with a `Pluck` 
-method. To extract the `Pluck` function and include it here in our README, we
-will define a Markdown comment containing the following directive:
+Let's look at a concrete example. There is a file in our repository called
+`goplucker.go` that contains a `GoPlucker` struct with a `Pluck` method. To
+extract the `Pluck` function and include it here in our README, we 
+define a Markdown comment containing the following directive:
 
 ```
 pluck("go", "function", "GoPlucker.Pluck", "https://github.com/tahardi/pluckmd/blob/main/internal/pluck/goplucker.go", -1, -1)
 ```
 
 This directive tells PluckMD to pluck a Go function called `GoPlucker.Pluck`
-from a file located at the given URL and to not include the function body (the 
-pair `-1,-1` is used to indicate that we want to hide the body).
+from a file located at the given URL and to hide the function body (the pair 
+`-1,-1` is used to indicate that we don't want to display the body).
 
 If you view the "raw" version of our README.md, you will see a comment immediately
 following this text that contains our directive. Initially, the code block
@@ -62,12 +55,12 @@ func (g *GoPlucker) Pluck(
 }
 ```
 
-To see this in action, delete the contents of the code block but leave
+Check for yourself. Delete the contents of the code block but leave
 the opening ticks, language identifier, and closing ticks. Then run
 `pluckmd --dir .` and the code block will once again be populated with the
 `GoPlucker.Pluck` function.
 
-Again, the `start` and `end` fields can be used to display only a portion of
+The `start` and `end` fields can be used to display only a portion of
 the struct or function body. This is useful when you want to walk a user through
 the logical sections of a function or struct. For example, let's look at the
 first part of the `GoPlucker.Pluck` function:
