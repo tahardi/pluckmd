@@ -50,7 +50,7 @@ func init() {
 		"ignore-dir",
 		"i",
 		[]string{},
-		"directory to ignore (e.g., testdata/, .github/",
+		"directories to ignore (e.g., testdata/, .github/)",
 	)
 	mainCmd.PersistentFlags().IntVarP(
 		&timeout,
