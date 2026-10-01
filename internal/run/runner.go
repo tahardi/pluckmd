@@ -85,7 +85,7 @@ func (r *Runner) Run(
 			return fmt.Errorf("%w: processing file: %w", ErrRunner, procErr)
 		}
 
-		// #nosec G306
+		// #nosec G306 G703
 		writeErr := os.WriteFile(file, processed, DefaultPermissions)
 		if writeErr != nil {
 			return fmt.Errorf("%w: writing file: %w", ErrRunner, writeErr)
