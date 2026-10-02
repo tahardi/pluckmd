@@ -189,7 +189,7 @@ go install github.com/blocky/pluck/cmd/pluck@v0.1.1
 2. Install the Bearclave PluckMD CLI tool.
 
 ```bash
-go install github.com/tahardi/pluckmd/cmd/pluckmd@v0.1.1
+go install github.com/tahardi/pluckmd/cmd/pluckmd@v0.2.0
 ```
 
 3. That's it! Add some pluck directives to your Markdown files and try it out!
